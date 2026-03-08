@@ -1,83 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Mittagstisch Generator</title>
-<style>
+  <meta charset="UTF-8" />
+  <title>Mittagstisch Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: #f4f4f4;
+    }
 
-body{
-font-family: Arial;
-padding:40px;
-background:#f4f4f4;
-}
+    select, input, button {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+    }
 
-select,input,button{
-padding:10px;
-margin:10px;
-font-size:16px;
-}
-
-canvas{
-display:none;
-}
-
-</style>
+    canvas {
+      display: none;
+    }
+  </style>
 </head>
-
 <body>
+  <h2>Mittagstisch Generator</h2>
 
-<h2>Mittagstisch Generator</h2>
+  Woche<br />
+  <input id="woche" value="18.02. - 20.02.2026" />
 
-Woche<br>
-<input id="woche" value="18.02 - 20.02.2026">
+  <br /><br />
 
-<br><br>
+  Dienstag
+  <select id="dienstag">
+    <option value="currywurst">Currywurst mit Semmel</option>
+    <option value="cordonbleu">Cordon Bleu mit Kartoffelsalat</option>
+    <option value="gulasch">Gulasch mit Spätzle</option>
+  </select>
 
-Dienstag
-<select id="dienstag">
-<option value="currywurst">Currywurst mit Semmel</option>
-<option value="cordonbleu">Cordon Bleu</option>
-<option value="gulasch">Gulasch mit Spätzle</option>
-</select>
+  <br />
 
-<br>
+  Mittwoch
+  <select id="mittwoch">
+    <option value="currywurst">Currywurst mit Semmel</option>
+    <option value="cordonbleu">Cordon Bleu mit Kartoffelsalat</option>
+    <option value="gulasch">Gulasch mit Spätzle</option>
+  </select>
 
-Mittwoch
-<select id="mittwoch">
-<option value="currywurst">Currywurst mit Semmel</option>
-<option value="cordonbleu">Cordon Bleu</option>
-<option value="gulasch">Gulasch mit Spätzle</option>
-</select>
+  <br />
 
-<br>
+  Donnerstag
+  <select id="donnerstag">
+    <option value="currywurst">Currywurst mit Semmel</option>
+    <option value="cordonbleu">Cordon Bleu mit Kartoffelsalat</option>
+    <option value="gulasch">Gulasch mit Spätzle</option>
+  </select>
 
-Donnerstag
-<select id="donnerstag">
-<option value="currywurst">Currywurst mit Semmel</option>
-<option value="cordonbleu">Cordon Bleu</option>
-<option value="gulasch">Gulasch mit Spätzle</option>
-</select>
+  <br />
 
-<br>
+  Freitag
+  <select id="freitag">
+    <option value="currywurst">Currywurst mit Semmel</option>
+    <option value="cordonbleu">Cordon Bleu mit Kartoffelsalat</option>
+    <option value="gulasch">Gulasch mit Spätzle</option>
+  </select>
 
-Freitag
-<select id="freitag">
-<option value="currywurst">Currywurst mit Semmel</option>
-<option value="cordonbleu">Cordon Bleu</option>
-<option value="gulasch">Gulasch mit Spätzle</option>
-</select>
+  <br /><br />
 
-<br><br>
+  <button onclick="generate()">Bild erstellen</button>
+  <a id="download" style="margin-left:20px;"></a>
 
-<button onclick="generate()">Bild erstellen</button>
+  <canvas id="canvas" width="2160" height="2700"></canvas>
 
-<br><br>
-
-<a id="download">Download Bild</a>
-
-<canvas id="canvas" width="1080" height="1080"></canvas>
-
-<script src="script.js"></script>
-
+  <script src="script.js"></script>
 </body>
 </html>
