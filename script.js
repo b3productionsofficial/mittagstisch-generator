@@ -1,16 +1,16 @@
 const gerichte = {
   currywurst: {
-    bild: "Gerichte/currywurst.jpeg",
+    bild: "Gerichte/currywurst.jpg",
     preis: "7,50 €",
     text: "Currywurst mit Semmel"
   },
   cordonbleu: {
-    bild: "Gerichte/cordonbleu.jpeg",
+    bild: "Gerichte/cordonbleu.jpg",
     preis: "8,50 €",
     text: "Cordon Bleu mit Kartoffelsalat"
   },
   gulasch: {
-    bild: "Gerichte/gulasch.jpeg",
+    bild: "Gerichte/gulasch.jpg",
     preis: "8,90 €",
     text: "Gulasch mit Spätzle"
   }
