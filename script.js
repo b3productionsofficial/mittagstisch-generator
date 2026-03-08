@@ -106,7 +106,7 @@ async function drawMeal(ctx, id, config) {
   // Preis
   ctx.textAlign = "center"
   ctx.fillStyle = config.priceColor || "#2f2f2f"
-  ctx.font = "600 48px 'Raleway', Arial, sans-serif"
+  ctx.font = "600 50px 'Raleway', Arial, sans-serif"
   ctx.fillText(meal.preis, config.priceX, config.priceY)
 }
 
@@ -151,7 +151,7 @@ async function generate() {
       textLineHeight: 50,
 
       priceX: 640,
-      priceY: 1590,
+      priceY: 1560,
       priceColor: "#ffffff"
     })
 
@@ -167,14 +167,14 @@ async function generate() {
       textLineHeight: 50,
 
       priceX: 1530,
-      priceY: 1555,
+      priceY: 1560,
       priceColor: "#2f2f2f"
     })
 
     // Donnerstag
     await drawMeal(ctx, "donnerstag", {
       imageX: 610,
-      imageY: 1845,
+      imageY: 1950,
       imageRadius: 178,
 
       textX: 640,
@@ -183,14 +183,14 @@ async function generate() {
       textLineHeight: 50,
 
       priceX: 640,
-      priceY: 2450,
+      priceY: 2300,
       priceColor: "#2f2f2f"
     })
 
     // Freitag
     await drawMeal(ctx, "freitag", {
       imageX: 1530,
-      imageY: 1845,
+      imageY: 1950,
       imageRadius: 178,
 
       textX: 1505,
@@ -198,8 +198,8 @@ async function generate() {
       textMaxWidth: 520,
       textLineHeight: 48,
 
-      priceX: 1505,
-      priceY: 2450,
+      priceX: 1530,
+      priceY: 2350,
       priceColor: "#ffffff"
     })
 
