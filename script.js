@@ -52,12 +52,11 @@ function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
 function drawImageCover(ctx, img, cx, cy, radius) {
   const diameter = radius * 2
   const imgRatio = img.width / img.height
-  const boxRatio = 1
 
   let drawWidth
   let drawHeight
 
-  if (imgRatio > boxRatio) {
+  if (imgRatio > 1) {
     drawHeight = diameter
     drawWidth = diameter * imgRatio
   } else {
@@ -81,7 +80,7 @@ async function drawMeal(ctx, id, config) {
 
   const img = await loadImage(meal.bild)
 
-  // Bild im Kreis ohne Verzerrung
+  // Rundes Bild ohne Verzerrung
   ctx.save()
   ctx.beginPath()
   ctx.arc(config.imageX, config.imageY, config.imageRadius, 0, Math.PI * 2)
@@ -92,8 +91,8 @@ async function drawMeal(ctx, id, config) {
 
   // Gerichttext
   ctx.textAlign = "center"
-  ctx.fillStyle = "#2d2d2d"
-  ctx.font = "500 42px 'Raleway', Arial, sans-serif"
+  ctx.fillStyle = "#2f2f2f"
+  ctx.font = "500 38px 'Raleway', Arial, sans-serif"
 
   drawWrappedText(
     ctx,
@@ -106,8 +105,8 @@ async function drawMeal(ctx, id, config) {
 
   // Preis
   ctx.textAlign = "center"
-  ctx.fillStyle = config.priceColor || "#2d2d2d"
-  ctx.font = "600 50px 'Raleway', Arial, sans-serif"
+  ctx.fillStyle = config.priceColor || "#2f2f2f"
+  ctx.font = "500 34px 'Raleway', Arial, sans-serif"
   ctx.fillText(meal.preis, config.priceX, config.priceY)
 }
 
@@ -122,6 +121,11 @@ async function generate() {
   link.removeAttribute("href")
 
   try {
+    // wichtig: warten bis Fonts geladen sind
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready
+    }
+
     const template = await loadImage("template.jpg")
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -129,73 +133,73 @@ async function generate() {
 
     const woche = document.getElementById("woche").value
 
-    // Woche oben
+    // Datum / Woche
     ctx.textAlign = "center"
     ctx.fillStyle = "#111111"
-    ctx.font = "700 92px 'IBM Plex Serif', Georgia, serif"
-    ctx.fillText(woche, 1080, 205)
+    ctx.font = "700 82px 'IBM Plex Serif', Georgia, serif"
+    ctx.fillText(woche, 1080, 275)
 
     // Dienstag
     await drawMeal(ctx, "dienstag", {
-      imageX: 560,
-      imageY: 780,
-      imageRadius: 145,
+      imageX: 575,
+      imageY: 930,
+      imageRadius: 168,
 
       textX: 640,
-      textY: 1170,
+      textY: 1395,
       textMaxWidth: 470,
-      textLineHeight: 56,
+      textLineHeight: 50,
 
       priceX: 640,
-      priceY: 1510,
+      priceY: 1590,
       priceColor: "#ffffff"
     })
 
     // Mittwoch
     await drawMeal(ctx, "mittwoch", {
-      imageX: 1515,
-      imageY: 780,
-      imageRadius: 145,
+      imageX: 1510,
+      imageY: 930,
+      imageRadius: 168,
 
       textX: 1505,
-      textY: 1170,
+      textY: 1395,
       textMaxWidth: 470,
-      textLineHeight: 56,
+      textLineHeight: 50,
 
       priceX: 1505,
-      priceY: 1510,
-      priceColor: "#2d2d2d"
+      priceY: 1590,
+      priceColor: "#2f2f2f"
     })
 
     // Donnerstag
     await drawMeal(ctx, "donnerstag", {
-      imageX: 560,
-      imageY: 1710,
-      imageRadius: 145,
+      imageX: 575,
+      imageY: 1845,
+      imageRadius: 168,
 
       textX: 640,
-      textY: 2100,
+      textY: 2290,
       textMaxWidth: 470,
-      textLineHeight: 56,
+      textLineHeight: 50,
 
       priceX: 640,
-      priceY: 2430,
-      priceColor: "#2d2d2d"
+      priceY: 2510,
+      priceColor: "#2f2f2f"
     })
 
     // Freitag
     await drawMeal(ctx, "freitag", {
-      imageX: 1515,
-      imageY: 1710,
-      imageRadius: 145,
+      imageX: 1510,
+      imageY: 1845,
+      imageRadius: 168,
 
       textX: 1505,
-      textY: 2095,
-      textMaxWidth: 500,
-      textLineHeight: 56,
+      textY: 2225,
+      textMaxWidth: 520,
+      textLineHeight: 48,
 
       priceX: 1505,
-      priceY: 2430,
+      priceY: 2510,
       priceColor: "#ffffff"
     })
 
