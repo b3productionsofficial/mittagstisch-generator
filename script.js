@@ -18,7 +18,7 @@ const gerichte = {
   },
 
   schaeufele: {
-    bild: "Gerichte/schaeufele.jpg",
+    bild: "Gerichte/schäufele.jpg",
     preis: "8,50 €",
     text: "Schäufele mit Knödel"
   },
@@ -90,7 +90,7 @@ const gerichte = {
   },
 
   kuemmelbraten: {
-    bild: "Gerichte/kuemmelbraten.jpg",
+    bild: "Gerichte/kümmelbraten.jpg",
     preis: "8,50 €",
     text: "Kümmelbraten mit Semmelknödel"
   },
