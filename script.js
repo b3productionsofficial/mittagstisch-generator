@@ -1,6 +1,6 @@
 const gerichte = {
   schlachtschüssel: {
-    bild: "Gerichte/schlachtschüssel.jpg",
+    bild: "Gerichte/schlachtschuessel.jpg",
     preis: "ab 5,00 €",
     text: "Schlachtschüssel"
   },
@@ -18,7 +18,7 @@ const gerichte = {
   },
 
   schaeufele: {
-    bild: "Gerichte/schäufele.jpg",
+    bild: "Gerichte/schaeufele.jpg",
     preis: "8,50 €",
     text: "Schäufele mit Knödel"
   },
@@ -90,7 +90,7 @@ const gerichte = {
   },
 
   kuemmelbraten: {
-    bild: "Gerichte/kümmelbraten.jpg",
+    bild: "Gerichte/kuemmelbraten.jpg",
     preis: "8,50 €",
     text: "Kümmelbraten mit Semmelknödel"
   },
@@ -126,7 +126,7 @@ const gerichte = {
   },
 
   rindfleisch_merrettich: {
-    bild: "Gerichte/rindfleisch_merrettich.jpg",
+    bild: "Gerichte/rindfleisch_meerrettich.jpg",
     preis: "8,50 €",
     text: "Rindfleisch mit Kartoffelsalat und Meerrettich"
   }
