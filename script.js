@@ -331,7 +331,7 @@ async function generate() {
       imageY: 1775,
       imageRadius: 180,
       textX: 640,
-      textY: 2100,
+      textY: 2190,
       textMaxWidth: 520,
       textLineHeight: 50,
       priceX: 640,
@@ -344,7 +344,7 @@ async function generate() {
       imageY: 1775,
       imageRadius: 180,
       textX: 1540,
-      textY: 2100,
+      textY: 2190,
       textMaxWidth: 520,
       textLineHeight: 48,
       priceX: 1535,
@@ -356,12 +356,15 @@ async function generate() {
     link.download = "mittagstisch.png"
     link.textContent = "Bild herunterladen"
     status.textContent = "Fertig"
+
+    generateCaption()
+  } catch (error) {
+    console.error(error)
+    status.textContent = "Fehler: " + error.message
   }
-  generateCaption()
 }
 
 function generateCaption() {
-
   const dienstag = gerichte[document.getElementById("dienstag").value].text
   const mittwoch = gerichte[document.getElementById("mittwoch").value].text
   const donnerstag = gerichte[document.getElementById("donnerstag").value].text
@@ -393,16 +396,10 @@ Wir freuen uns auf euren Besuch!
   document.getElementById("caption").value = caption
 }
 
-
 function copyCaption() {
   const textarea = document.getElementById("caption")
   textarea.select()
   document.execCommand("copy")
-} 
-catch (error) {
-    console.error(error)
-    status.textContent = "Fehler: " + error.message
-  }
 }
 
 window.addEventListener("DOMContentLoaded", () => {
