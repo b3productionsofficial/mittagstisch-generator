@@ -67,8 +67,18 @@ Freitag<br>
   <br /><br />
 
 <button onclick="generate()">Bild erstellen</button>
-<a id="download" style="margin-left:20px;"></a>
-<p id="status" style="margin-top:15px; color:#b00020; font-weight:bold;"></p>
+<a id="download" style="margin-left:20px;">Bild herunterladen</a>
+  <br><br>
+
+<h3>Instagram Text</h3>
+
+<textarea id="caption" rows="10" style="width:400px;"></textarea>
+
+<br>
+
+<button onclick="copyCaption()">Text kopieren</button>
+  
+  <p id="status" style="margin-top:15px; color:#b00020; font-weight:bold;"></p>
   <canvas id="canvas" width="2160" height="2700"></canvas>
 
   <script src="script.js"></script>
