@@ -356,7 +356,50 @@ async function generate() {
     link.download = "mittagstisch.png"
     link.textContent = "Bild herunterladen"
     status.textContent = "Fertig"
-  } catch (error) {
+  }
+  generateCaption()
+}
+
+function generateCaption() {
+
+  const dienstag = gerichte[document.getElementById("dienstag").value].text
+  const mittwoch = gerichte[document.getElementById("mittwoch").value].text
+  const donnerstag = gerichte[document.getElementById("donnerstag").value].text
+  const freitag = gerichte[document.getElementById("freitag").value].text
+
+  const woche = document.getElementById("woche").value
+
+  const caption =
+`Unser Mittagstisch diese Woche 🍽️
+
+${woche}
+
+Dienstag
+${dienstag}
+
+Mittwoch
+${mittwoch}
+
+Donnerstag
+${donnerstag}
+
+Freitag
+${freitag}
+
+Wir freuen uns auf euren Besuch!
+
+#mittagstisch #metzgerei #regional`
+
+  document.getElementById("caption").value = caption
+}
+
+
+function copyCaption() {
+  const textarea = document.getElementById("caption")
+  textarea.select()
+  document.execCommand("copy")
+} 
+catch (error) {
     console.error(error)
     status.textContent = "Fehler: " + error.message
   }
