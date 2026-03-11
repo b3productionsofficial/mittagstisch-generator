@@ -1,5 +1,5 @@
 const gerichte = {
-  schlachtschüssel: {
+  schlachtschuessel: {
     bild: "Gerichte/schlachtschuessel.jpg",
     preis: "ab 5,00 €",
     text: "Schlachtschüssel"
@@ -125,7 +125,7 @@ const gerichte = {
     text: "Lasagne"
   },
 
-  rindfleisch_merrettich: {
+  rindfleisch_meerrettich: {
     bild: "Gerichte/rindfleisch_meerrettich.jpg",
     preis: "8,50 €",
     text: "Rindfleisch mit Kartoffelsalat und Meerrettich"
@@ -168,11 +168,23 @@ function fuelleDropdown(id, standardWert = "", gefilterteListe = alleGerichteSor
 function filterDropdown(selectId, searchInputId) {
   const suchtext = document.getElementById(searchInputId).value.trim().toLowerCase()
 
-  const gefilterteListe = alleGerichteSortiert.filter(([key, gericht]) =>
+  const gefilterteListe = alleGerichteSortiert.filter(([, gericht]) =>
     gericht.text.toLowerCase().includes(suchtext)
   )
 
   fuelleDropdown(selectId, "", gefilterteListe)
+  setPreisFeld(selectId, "preis-" + selectId)
+}
+
+function setPreisFeld(selectId, preisInputId) {
+  const wert = document.getElementById(selectId).value
+  const gericht = gerichte[wert]
+  if (!gericht) return
+
+  const input = document.getElementById(preisInputId)
+  if (input) {
+    input.value = gericht.preis
+  }
 }
 
 function initialisiereDropdowns() {
@@ -180,6 +192,11 @@ function initialisiereDropdowns() {
   fuelleDropdown("mittwoch", "cordonbleu")
   fuelleDropdown("donnerstag", "gulasch")
   fuelleDropdown("freitag", "lasagne")
+
+  setPreisFeld("dienstag", "preis-dienstag")
+  setPreisFeld("mittwoch", "preis-mittwoch")
+  setPreisFeld("donnerstag", "preis-donnerstag")
+  setPreisFeld("freitag", "preis-freitag")
 }
 
 function loadImage(src) {
@@ -267,10 +284,12 @@ async function drawMeal(ctx, id, config) {
     config.textLineHeight
   )
 
+  const preisAusFeld = document.getElementById(config.preisInputId)?.value || meal.preis
+
   ctx.textAlign = "center"
   ctx.fillStyle = config.priceColor || "#2f2f2f"
   ctx.font = "600 52px 'Raleway', Arial, sans-serif"
-  ctx.fillText(meal.preis, config.priceX, config.priceY)
+  ctx.fillText(preisAusFeld, config.priceX, config.priceY)
 }
 
 async function generate() {
@@ -310,7 +329,8 @@ async function generate() {
       textLineHeight: 50,
       priceX: 640,
       priceY: 1560,
-      priceColor: "#ffffff"
+      priceColor: "#ffffff",
+      preisInputId: "preis-dienstag"
     })
 
     await drawMeal(ctx, "mittwoch", {
@@ -323,7 +343,8 @@ async function generate() {
       textLineHeight: 50,
       priceX: 1535,
       priceY: 1560,
-      priceColor: "#2f2f2f"
+      priceColor: "#2f2f2f",
+      preisInputId: "preis-mittwoch"
     })
 
     await drawMeal(ctx, "donnerstag", {
@@ -336,7 +357,8 @@ async function generate() {
       textLineHeight: 50,
       priceX: 640,
       priceY: 2360,
-      priceColor: "#2f2f2f"
+      priceColor: "#2f2f2f",
+      preisInputId: "preis-donnerstag"
     })
 
     await drawMeal(ctx, "freitag", {
@@ -349,7 +371,8 @@ async function generate() {
       textLineHeight: 48,
       priceX: 1535,
       priceY: 2360,
-      priceColor: "#ffffff"
+      priceColor: "#ffffff",
+      preisInputId: "preis-freitag"
     })
 
     link.href = canvas.toDataURL("image/png")
@@ -370,6 +393,11 @@ function generateCaption() {
   const donnerstag = gerichte[document.getElementById("donnerstag").value].text
   const freitag = gerichte[document.getElementById("freitag").value].text
 
+  const preisDienstag = document.getElementById("preis-dienstag").value
+  const preisMittwoch = document.getElementById("preis-mittwoch").value
+  const preisDonnerstag = document.getElementById("preis-donnerstag").value
+  const preisFreitag = document.getElementById("preis-freitag").value
+
   const woche = document.getElementById("woche").value
 
   const caption =
@@ -378,16 +406,16 @@ function generateCaption() {
 ${woche}
 
 Dienstag
-${dienstag}
+${dienstag} – ${preisDienstag}
 
 Mittwoch
-${mittwoch}
+${mittwoch} – ${preisMittwoch}
 
 Donnerstag
-${donnerstag}
+${donnerstag} – ${preisDonnerstag}
 
 Freitag
-${freitag}
+${freitag} – ${preisFreitag}
 
 Wir freuen uns auf euren Besuch!
 
@@ -399,6 +427,7 @@ Wir freuen uns auf euren Besuch!
 function copyCaption() {
   const textarea = document.getElementById("caption")
   textarea.select()
+  textarea.setSelectionRange(0, 99999)
   document.execCommand("copy")
 }
 
