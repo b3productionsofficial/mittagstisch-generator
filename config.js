@@ -26,31 +26,31 @@ const kundenLayouts = {
         template: "templates/klassisch-feed.jpg",
         width: 1080,
         height: 1350,
-        woche: { x: 1200, y: 340, fontSize: 90 },
+        woche: { x: 630, y: 180, fontSize: 54 },
         meals: {
           dienstag: {
-            imageX: 610, imageY: 930, imageRadius: 180,
-            textX: 640, textY: 1266, textMaxWidth: 520, textLineHeight: 50,
-            priceX: 640, priceY: 1560, priceColor: "#ffffff",
-            textFontSize: 50, priceFontSize: 52
+            imageX: 314, imageY: 469, imageRadius: 82,
+            textX: 314, textY: 640, textMaxWidth: 360, textLineHeight: 30,
+            priceX: 315, priceY: 762, priceColor: "#ffffff",
+            textFontSize: 28, priceFontSize: 30
           },
           mittwoch: {
-            imageX: 1535, imageY: 930, imageRadius: 180,
-            textX: 1530, textY: 1265, textMaxWidth: 520, textLineHeight: 50,
-            priceX: 1535, priceY: 1560, priceColor: "#2f2f2f",
-            textFontSize: 50, priceFontSize: 52
+            imageX: 767, imageY: 479, imageRadius: 82,
+            textX: 772, textY: 640, textMaxWidth: 360, textLineHeight: 30,
+            priceX: 772, priceY: 762, priceColor: "#2f2f2f",
+            textFontSize: 28, priceFontSize: 30
           },
           donnerstag: {
-            imageX: 610, imageY: 1775, imageRadius: 180,
-            textX: 640, textY: 2125, textMaxWidth: 520, textLineHeight: 50,
-            priceX: 640, priceY: 2360, priceColor: "#2f2f2f",
-            textFontSize: 50, priceFontSize: 52
+            imageX: 315, imageY: 894, imageRadius: 82,
+            textX: 315, textY: 1070, textMaxWidth: 360, textLineHeight: 30,
+            priceX: 315, priceY: 1188, priceColor: "#2f2f2f",
+            textFontSize: 28, priceFontSize: 30
           },
           freitag: {
-            imageX: 1530, imageY: 1775, imageRadius: 180,
-            textX: 1540, textY: 2125, textMaxWidth: 520, textLineHeight: 48,
-            priceX: 1535, priceY: 2360, priceColor: "#ffffff",
-            textFontSize: 50, priceFontSize: 52
+            imageX: 767, imageY: 893, imageRadius: 82,
+            textX: 770, textY: 1070, textMaxWidth: 360, textLineHeight: 30,
+            priceX: 768, priceY: 1188, priceColor: "#ffffff",
+            textFontSize: 28, priceFontSize: 30
           }
         }
       },
@@ -59,31 +59,31 @@ const kundenLayouts = {
         template: "templates/klassisch-story.jpg",
         width: 1080,
         height: 1920,
-        woche: { x: 540, y: 355, fontSize: 38 },
+        woche: { x: 660, y: 310, fontSize: 65 },
         meals: {
           dienstag: {
-            imageX: 270, imageY: 755, imageRadius: 120,
-            textX: 270, textY: 845, textMaxWidth: 240, textLineHeight: 30,
-            priceX: 270, priceY: 965, priceColor: "#ffffff",
-            textFontSize: 22, priceFontSize: 24
+            imageX: 300, imageY: 712, imageRadius: 105,
+            textX: 300, textY: 935, textMaxWidth: 400, textLineHeight: 30,
+            priceX: 300, priceY: 1087, priceColor: "#ffffff",
+            textFontSize: 32, priceFontSize: 32
           },
           mittwoch: {
-            imageX: 810, imageY: 755, imageRadius: 120,
-            textX: 810, textY: 845, textMaxWidth: 240, textLineHeight: 30,
-            priceX: 810, priceY: 965, priceColor: "#2f2f2f",
-            textFontSize: 22, priceFontSize: 24
+            imageX: 805, imageY: 711, imageRadius: 105,
+            textX: 810, textY: 935, textMaxWidth: 400, textLineHeight: 30,
+            priceX: 810, priceY: 1085, priceColor: "#2f2f2f",
+            textFontSize: 32, priceFontSize: 32
           },
           donnerstag: {
-            imageX: 270, imageY: 1265, imageRadius: 120,
-            textX: 270, textY: 1355, textMaxWidth: 240, textLineHeight: 30,
-            priceX: 270, priceY: 1475, priceColor: "#2f2f2f",
-            textFontSize: 22, priceFontSize: 24
+            imageX: 300, imageY: 1275, imageRadius: 105,
+            textX: 300, textY: 1500, textMaxWidth: 400, textLineHeight: 30,
+            priceX: 300, priceY: 1650, priceColor: "#2f2f2f",
+            textFontSize: 32, priceFontSize: 32
           },
           freitag: {
-            imageX: 810, imageY: 1265, imageRadius: 120,
-            textX: 810, textY: 1355, textMaxWidth: 240, textLineHeight: 30,
+            imageX: 805, imageY: 1275, imageRadius: 105,
+            textX: 810, textY: 1500, textMaxWidth: 400, textLineHeight: 30,
             priceX: 810, priceY: 1475, priceColor: "#ffffff",
-            textFontSize: 22, priceFontSize: 24
+            textFontSize: 32, priceFontSize: 32
           }
         }
       }
@@ -95,9 +95,9 @@ const kundenLayouts = {
         width: 3508,
         height: 2480,
         datum: {
-          x: 1754,
-          y: 320,
-          fontSize: 110
+          x: 2920,
+          y: 350,
+          fontSize: 100
         }
       },
 
@@ -107,29 +107,29 @@ const kundenLayouts = {
         height: 2480,
 
         links: {
-          woche: { x: 875, y: 220, fontSize: 72 },
+          woche: { x: 990, y: 250, fontSize: 90 },
           meals: {
             dienstag: {
-              imageX: 430, imageY: 720, imageRadius: 160,
-              textX: 430, textY: 920, textMaxWidth: 420, textLineHeight: 54,
-              priceX: 430, priceY: 1180, priceColor: "#ffffff",
+              imageX: 477, imageY: 540, imageRadius: 145,
+              textX: 475, textY: 880, textMaxWidth: 420, textLineHeight: 54,
+              priceX: 475, priceY: 1120, priceColor: "#ffffff",
               textFontSize: 56, priceFontSize: 60
             },
             mittwoch: {
-              imageX: 1240, imageY: 720, imageRadius: 160,
-              textX: 1240, textY: 920, textMaxWidth: 420, textLineHeight: 54,
-              priceX: 1240, priceY: 1180, priceColor: "#2f2f2f",
+              imageX: 1310, imageY: 540, imageRadius: 145,
+              textX: 1310, textY: 880, textMaxWidth: 420, textLineHeight: 54,
+              priceX: 1315, priceY: 1120, priceColor: "#2f2f2f",
               textFontSize: 56, priceFontSize: 60
             },
             donnerstag: {
-              imageX: 430, imageY: 1590, imageRadius: 160,
-              textX: 430, textY: 1790, textMaxWidth: 420, textLineHeight: 54,
-              priceX: 430, priceY: 2050, priceColor: "#2f2f2f",
+              imageX: 477, imageY: 1335, imageRadius: 145,
+              textX: 475, textY: 1700, textMaxWidth: 420, textLineHeight: 54,
+              priceX: 475, priceY: 1970, priceColor: "#2f2f2f",
               textFontSize: 56, priceFontSize: 60
             },
             freitag: {
-              imageX: 1240, imageY: 1590, imageRadius: 160,
-              textX: 1240, textY: 1790, textMaxWidth: 420, textLineHeight: 54,
+              imageX: 1310, imageY: 1335, imageRadius: 145,
+              textX: 1310, textY: 1700, textMaxWidth: 420, textLineHeight: 54,
               priceX: 1240, priceY: 2050, priceColor: "#ffffff",
               textFontSize: 56, priceFontSize: 60
             }
@@ -137,30 +137,30 @@ const kundenLayouts = {
         },
 
         rechts: {
-          woche: { x: 2630, y: 220, fontSize: 72 },
+          woche: { x: 2750, y: 250, fontSize: 90 },
           meals: {
             dienstag: {
-              imageX: 2190, imageY: 720, imageRadius: 160,
-              textX: 2190, textY: 920, textMaxWidth: 420, textLineHeight: 54,
-              priceX: 2190, priceY: 1180, priceColor: "#ffffff",
+              imageX: 2184, imageY: 530, imageRadius: 145,
+              textX: 2180, textY: 880, textMaxWidth: 420, textLineHeight: 54,
+              priceX: 2180, priceY: 1125, priceColor: "#ffffff",
               textFontSize: 56, priceFontSize: 60
             },
             mittwoch: {
-              imageX: 3000, imageY: 720, imageRadius: 160,
-              textX: 3000, textY: 920, textMaxWidth: 420, textLineHeight: 54,
-              priceX: 3000, priceY: 1180, priceColor: "#2f2f2f",
+              imageX: 3007, imageY: 540, imageRadius: 145,
+              textX: 3015, textY: 880, textMaxWidth: 420, textLineHeight: 54,
+              priceX: 3020, priceY: 1125, priceColor: "#2f2f2f",
               textFontSize: 56, priceFontSize: 60
             },
             donnerstag: {
-              imageX: 2190, imageY: 1590, imageRadius: 160,
-              textX: 2190, textY: 1790, textMaxWidth: 420, textLineHeight: 54,
-              priceX: 2190, priceY: 2050, priceColor: "#2f2f2f",
+              imageX: 2190, imageY: 1335, imageRadius: 145,
+              textX: 2190, textY: 1700, textMaxWidth: 420, textLineHeight: 54,
+              priceX: 2180, priceY: 1970, priceColor: "#2f2f2f",
               textFontSize: 56, priceFontSize: 60
             },
             freitag: {
-              imageX: 3000, imageY: 1590, imageRadius: 160,
-              textX: 3000, textY: 1790, textMaxWidth: 420, textLineHeight: 54,
-              priceX: 3000, priceY: 2050, priceColor: "#ffffff",
+              imageX: 3025, imageY: 1335, imageRadius: 145,
+              textX: 3015, textY: 1700, textMaxWidth: 420, textLineHeight: 54,
+              priceX: 3020, priceY: 1970, priceColor: "#ffffff",
               textFontSize: 56, priceFontSize: 60
             }
           }
