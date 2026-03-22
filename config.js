@@ -130,7 +130,7 @@ const kundenLayouts = {
             freitag: {
               imageX: 1310, imageY: 1335, imageRadius: 145,
               textX: 1310, textY: 1700, textMaxWidth: 420, textLineHeight: 54,
-              priceX: 1240, priceY: 1970, priceColor: "#ffffff",
+              priceX: 1315, priceY: 1970, priceColor: "#ffffff",
               textFontSize: 56, priceFontSize: 60
             }
           }
