@@ -862,7 +862,7 @@ function buildMealsPanels() {
       const m = state.meals[day][i]
       html += `
         <div class="meal-item">
-          <div class="meal-item-header">Gericht ${count > 1 ? i+1 : ''}</div>
+          <div class="meal-item-header" style="display:flex;align-items:center;justify-content:space-between;"><span>Gericht ${count > 1 ? i+1 : ''}</span><button class="btn-picker" onclick="openPicker('${day}',${i})">📋 Aus Liste wählen</button></div>
           <div class="meal-fields">
             <div class="field-wrap">
               <label>Gerichtname</label>
