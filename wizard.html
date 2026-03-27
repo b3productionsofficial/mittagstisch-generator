@@ -1064,11 +1064,15 @@ function selectGericht(name, preis) {
   state.meals[_pickerDay][_pickerIdx].name  = name
   state.meals[_pickerDay][_pickerIdx].preis = preis
 
-  // Felder im DOM updaten
-  const nameInput  = document.querySelector(`#meal-panel-${_pickerDay} .meal-item:nth-child(${_pickerIdx+1}) input[type=text]:first-of-type`)
-  const preisInput = document.querySelector(`#meal-panel-${_pickerDay} .meal-item:nth-child(${_pickerIdx+1}) input[type=text]:last-of-type`)
-  if (nameInput)  nameInput.value  = name
-  if (preisInput) preisInput.value = preis
+  // Felder im DOM updaten - alle inputs im Panel holen
+  const panel = document.getElementById(`meal-panel-${_pickerDay}`)
+  const items = panel ? panel.querySelectorAll('.meal-item') : []
+  const item  = items[_pickerIdx]
+  if (item) {
+    const inputs = item.querySelectorAll('input[type=text]')
+    if (inputs[0]) inputs[0].value = name
+    if (inputs[1]) inputs[1].value = preis
+  }
 
   closePicker()
   showToast('Gericht übernommen ✓')
