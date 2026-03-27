@@ -8,7 +8,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="layouts.js"></script>
-  <script src="script.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <style>
@@ -1402,6 +1401,174 @@ function selectGericht(name, preis) {
 document.getElementById('picker-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closePicker()
 })
+
+
+/* ══ Wizard Canvas Renderer (eigenständig, ohne script.js) ══ */
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload  = () => resolve(img)
+    img.onerror = () => reject(new Error('Bild nicht geladen: ' + src))
+    img.src = src
+  })
+}
+
+function drawImageCover(ctx, img, cx, cy, radius) {
+  const size = radius * 2
+  const scale = Math.max(size / img.width, size / img.height)
+  const w = img.width  * scale
+  const h = img.height * scale
+  ctx.drawImage(img, cx - w/2, cy - h/2, w, h)
+}
+
+function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ')
+  let line = ''
+  let currentY = y
+  for (let n = 0; n < words.length; n++) {
+    const testLine  = line + words[n] + ' '
+    const metrics   = ctx.measureText(testLine)
+    if (metrics.width > maxWidth && n > 0) {
+      ctx.fillText(line.trim(), x, currentY)
+      line = words[n] + ' '
+      currentY += lineHeight
+    } else {
+      line = testLine
+    }
+  }
+  ctx.fillText(line.trim(), x, currentY)
+}
+
+async function renderToCanvas(canvas, format) {
+  const layoutKey = state.selectedLayoutKey || 'mittagstisch_instagram'
+  const layoutData = kundenLayouts?.sorgundseitz?.[layoutKey]?.[format]
+  if (!layoutData) throw new Error('Layout nicht gefunden: ' + layoutKey + '/' + format)
+
+  canvas.width  = layoutData.width
+  canvas.height = layoutData.height
+  const ctx = canvas.getContext('2d')
+
+  // Hintergrundbild laden
+  const bg = await loadImage(layoutData.template)
+  ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+
+  // Woche einzeichnen
+  const wocheVal = document.getElementById('woche-input')?.value || ''
+  if (layoutData.woche && wocheVal) {
+    ctx.textAlign   = 'center'
+    ctx.fillStyle   = '#2f2f2f'
+    ctx.font        = `600 ${layoutData.woche.fontSize}px 'Raleway', Arial, sans-serif`
+    ctx.fillText(wocheVal, layoutData.woche.x, layoutData.woche.y)
+  }
+
+  // Datum (Druck-Vorderseite)
+  if (layoutData.datum && wocheVal) {
+    ctx.textAlign = 'center'
+    ctx.fillStyle = '#2f2f2f'
+    ctx.font      = `600 ${layoutData.datum.fontSize}px 'Raleway', Arial, sans-serif`
+    ctx.fillText(wocheVal, layoutData.datum.x, layoutData.datum.y)
+    return // Vorderseite hat keine Gerichte
+  }
+
+  // Gerichte einzeichnen
+  const active = Object.keys(state.days).filter(d => state.days[d])
+  const mealsConfig = layoutData.meals || layoutData.links?.meals || layoutData.rechts?.meals || {}
+
+  for (const day of active) {
+    const config = mealsConfig[day]
+    if (!config) continue
+
+    const m = (state.meals[day] || [])[0]
+    if (!m?.name) continue
+
+    // Gericht aus standardGerichte finden für Bild-Pfad
+    const gerichtKey = Object.keys(standardGerichte).find(k =>
+      standardGerichte[k].text === m.name
+    )
+    const gericht = gerichtKey ? standardGerichte[gerichtKey] : null
+    const preis   = m.preis || gericht?.preis || ''
+
+    // Bild zeichnen
+    if (gericht?.bild) {
+      try {
+        const img = await loadImage(gericht.bild)
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(config.imageX, config.imageY, config.imageRadius, 0, Math.PI * 2)
+        ctx.closePath()
+        ctx.clip()
+        drawImageCover(ctx, img, config.imageX, config.imageY, config.imageRadius)
+        ctx.restore()
+      } catch(e) {
+        // Kein Bild verfügbar — Kreis leer lassen
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(config.imageX, config.imageY, config.imageRadius, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(0,0,0,0.1)'
+        ctx.fill()
+        ctx.restore()
+      }
+    }
+
+    // Text zeichnen
+    ctx.textAlign = 'center'
+    ctx.fillStyle = '#2f2f2f'
+    ctx.font      = `500 ${config.textFontSize}px 'Raleway', Arial, sans-serif`
+    drawWrappedText(ctx, m.name, config.textX, config.textY, config.textMaxWidth, config.textLineHeight)
+
+    // Preis zeichnen
+    if (preis) {
+      ctx.textAlign = 'center'
+      ctx.fillStyle = config.priceColor || '#2f2f2f'
+      ctx.font      = `600 ${config.priceFontSize}px 'Raleway', Arial, sans-serif`
+      ctx.fillText(preis, config.priceX, config.priceY)
+    }
+  }
+
+  // Druck Rückseite: Links + Rechts separat rendern
+  if (layoutData.links && layoutData.rechts) {
+    for (const seite of ['links', 'rechts']) {
+      const seiteData = layoutData[seite]
+      if (seiteData.woche && wocheVal) {
+        ctx.textAlign = 'center'
+        ctx.fillStyle = '#2f2f2f'
+        ctx.font      = `600 ${seiteData.woche.fontSize}px 'Raleway', Arial, sans-serif`
+        ctx.fillText(wocheVal, seiteData.woche.x, seiteData.woche.y)
+      }
+      for (const day of active) {
+        const config = seiteData.meals?.[day]
+        if (!config) continue
+        const m = (state.meals[day] || [])[0]
+        if (!m?.name) continue
+        const gerichtKey = Object.keys(standardGerichte).find(k => standardGerichte[k].text === m.name)
+        const gericht = gerichtKey ? standardGerichte[gerichtKey] : null
+        const preis   = m.preis || gericht?.preis || ''
+        if (gericht?.bild) {
+          try {
+            const img = await loadImage(gericht.bild)
+            ctx.save()
+            ctx.beginPath()
+            ctx.arc(config.imageX, config.imageY, config.imageRadius, 0, Math.PI * 2)
+            ctx.clip()
+            drawImageCover(ctx, img, config.imageX, config.imageY, config.imageRadius)
+            ctx.restore()
+          } catch(e) {}
+        }
+        ctx.textAlign = 'center'
+        ctx.fillStyle = '#2f2f2f'
+        ctx.font      = `500 ${config.textFontSize}px 'Raleway', Arial, sans-serif`
+        drawWrappedText(ctx, m.name, config.textX, config.textY, config.textMaxWidth, config.textLineHeight)
+        if (preis) {
+          ctx.fillStyle = config.priceColor || '#2f2f2f'
+          ctx.font      = `600 ${config.priceFontSize}px 'Raleway', Arial, sans-serif`
+          ctx.fillText(preis, config.priceX, config.priceY)
+        }
+      }
+    }
+  }
+}
 
 /* ══ Init: Design aus Dashboard laden wenn vorhanden ══ */
 window.addEventListener('DOMContentLoaded', () => {
