@@ -7,6 +7,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
+  <script src="layouts.js"></script>
+  <script src="script.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <style>
@@ -343,6 +345,7 @@
       color: var(--muted); font-size: 13px;
     }
     .preview-canvas-wrap.square { aspect-ratio: 1/1; }
+    .preview-canvas-wrap.landscape { aspect-ratio: 4/3; }
 
     .download-row {
       display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;
@@ -742,35 +745,24 @@
   <div class="wizard-step" id="step5">
     <div class="card">
       <div class="card-title">Vorschau & Export</div>
-      <div class="card-sub">Alles gut? Dann lade deine Bilder herunter.</div>
+      <div class="card-sub">Dein Mittagstisch wird gerendert — bereit zum Herunterladen</div>
 
-      <div class="preview-grid">
-        <div class="preview-panel">
-          <div class="preview-label">Story / Hochformat</div>
-          <div class="preview-canvas-wrap" id="prev-story">
-            <span>Vorschau wird geladen…</span>
-          </div>
-        </div>
-        <div class="preview-panel">
-          <div class="preview-label">Feed / Quadrat</div>
-          <div class="preview-canvas-wrap square" id="prev-feed">
-            <span>Vorschau wird geladen…</span>
-          </div>
-        </div>
+      <div id="render-status" style="text-align:center;padding:20px;color:var(--muted);font-size:14px;">
+        ⏳ Vorschau wird geladen…
       </div>
 
-      <div class="download-row">
-        <button class="btn-download primary" onclick="downloadAll()">⬇ Alle herunterladen</button>
-        <button class="btn-download" onclick="downloadStory()">Story PNG</button>
-        <button class="btn-download" onclick="downloadFeed()">Feed PNG</button>
-      </div>
+      <div id="preview-panels-wrap" style="display:none;">
+        <div class="preview-grid" id="wizard-preview-grid"></div>
 
-      <div class="caption-box">
-        <div class="caption-header">
-          <span class="caption-title">📋 Instagram Caption</span>
-          <button class="btn-copy" onclick="copyCaption()">Kopieren</button>
+        <div class="download-row" id="wizard-download-row"></div>
+
+        <div class="caption-box" style="margin-top:16px;">
+          <div class="caption-header">
+            <span class="caption-title">📋 Instagram Caption</span>
+            <button class="btn-copy" onclick="copyWizardCaption()">Kopieren</button>
+          </div>
+          <textarea class="caption-text" id="caption-output" readonly></textarea>
         </div>
-        <textarea class="caption-text" id="caption-output" readonly></textarea>
       </div>
     </div>
 
@@ -1117,15 +1109,157 @@ function removeTemplate() {
   document.getElementById('template-upload-zone').style.display = 'block'
 }
 
-/* ══ Step 4: Preview & Export ══ */
-function buildPreview() {
-  // Build caption
+/* ══ Step 5: Echter Canvas-Renderer ══ */
+const wizardCanvases = {}
+
+async function buildPreview() {
+  const status = document.getElementById('render-status')
+  const wrap   = document.getElementById('preview-panels-wrap')
+  const grid   = document.getElementById('wizard-preview-grid')
+  const dlRow  = document.getElementById('wizard-download-row')
+
+  status.style.display = 'block'
+  wrap.style.display   = 'none'
+  grid.innerHTML = ''
+  dlRow.innerHTML = ''
+
+  // Caption aufbauen
+  buildWizardCaption()
+
+  // Herausfinden welches Layout/Format gewählt wurde
+  const layoutKey = state.selectedLayoutKey || 'mittagstisch_instagram'
+  const format    = state.selectedFormat    || 'story'
+
+  // Gerichte in den alten Generator-State übertragen
+  syncWizardStateToGenerator()
+
+  try {
+    // Renders basierend auf gewähltem Template
+    const renders = []
+
+    if (layoutKey === 'mittagstisch_instagram') {
+      renders.push({ id: 'story', label: 'Instagram Story', btnLabel: 'Story PNG' })
+      renders.push({ id: 'feed',  label: 'Instagram Feed',  btnLabel: 'Feed PNG' })
+    } else if (layoutKey === 'mittagstisch_druck') {
+      renders.push({ id: 'front', label: 'Vorderseite', btnLabel: 'Vorderseite PNG' })
+      renders.push({ id: 'back',  label: 'Rückseite',   btnLabel: 'Rückseite PNG' })
+    }
+
+    for (const r of renders) {
+      const panel = document.createElement('div')
+      panel.className = 'preview-panel'
+      const isPortrait = r.id === 'story'
+      panel.innerHTML = `
+        <div class="preview-label">${r.label}</div>
+        <div class="preview-canvas-wrap ${r.id === 'feed' ? 'square' : r.id === 'front' || r.id === 'back' ? 'landscape' : ''}">
+          <canvas id="wizard-canvas-${r.id}" style="width:100%;height:100%;border-radius:6px;display:block;"></canvas>
+        </div>`
+      grid.appendChild(panel)
+
+      // Echtes Canvas rendern
+      const canvas = document.getElementById(`wizard-canvas-${r.id}`)
+      try {
+        await renderToCanvas(canvas, r.id)
+        wizardCanvases[r.id] = canvas
+      } catch(e) {
+        console.error('Render Fehler:', r.id, e)
+        // Fallback: einfacher Text-Canvas
+        const layoutData = kundenLayouts?.sorgundseitz?.[layoutKey]?.[r.id]
+        canvas.width  = layoutData?.width  || 1080
+        canvas.height = layoutData?.height || 1920
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#1a1714'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.fillStyle = '#d4853a'
+        ctx.font = `bold ${canvas.width * 0.07}px sans-serif`
+        ctx.textAlign = 'center'
+        ctx.fillText('MetzgerPost', canvas.width/2, canvas.height/2)
+        ctx.fillStyle = '#8a8070'
+        ctx.font = `${canvas.width * 0.04}px sans-serif`
+        ctx.fillText('Template wird geladen...', canvas.width/2, canvas.height/2 + canvas.width * 0.1)
+        wizardCanvases[r.id] = canvas
+      }
+
+      // Download Button
+      const btn = document.createElement('button')
+      btn.className = 'btn-download'
+      btn.textContent = r.btnLabel
+      btn.onclick = () => wizardDownload(r.id, r.label)
+      dlRow.appendChild(btn)
+    }
+
+    // Alle herunterladen Button
+    const btnAll = document.createElement('button')
+    btnAll.className = 'btn-download primary'
+    btnAll.textContent = '⬇ Alle herunterladen'
+    btnAll.onclick = () => renders.forEach((r,i) => setTimeout(() => wizardDownload(r.id, r.label), i*400))
+    dlRow.insertBefore(btnAll, dlRow.firstChild)
+
+    status.style.display = 'none'
+    wrap.style.display   = 'block'
+
+  } catch(e) {
+    status.textContent = '❌ Fehler beim Rendern: ' + e.message
+    console.error(e)
+  }
+}
+
+function syncWizardStateToGenerator() {
+  // Woche setzen
+  const wocheInput = document.getElementById('woche-input')
+  const woche = wocheInput?.value || ''
+
+  // Globale gerichte Variable aus config.js nutzen
+  window.gerichte = typeof getGerichte === 'function' ? getGerichte() : standardGerichte
+
+  // Dropdowns im Hintergrund setzen (renderToCanvas liest von dort)
+  const active = Object.keys(state.days).filter(d => state.days[d])
+  const dayMap = { dienstag: 'dienstag', mittwoch: 'mittwoch', donnerstag: 'donnerstag', freitag: 'freitag' }
+
+  active.forEach(day => {
+    const m = (state.meals[day] || [])[0]
+    if (!m?.name) return
+
+    // Preis überschreiben wenn abweichend
+    if (m.name && window.gerichte) {
+      const gerichtKey = Object.keys(window.gerichte).find(k =>
+        window.gerichte[k].text === m.name
+      )
+      if (gerichtKey && m.preis && window.gerichte[gerichtKey]) {
+        window.gerichte[gerichtKey] = { ...window.gerichte[gerichtKey], preis: m.preis }
+      }
+    }
+
+    // Select-Element setzen
+    const selectEl = document.getElementById(day)
+    if (selectEl && m.name) {
+      const gerichtKey = Object.keys(window.gerichte || standardGerichte).find(k =>
+        (window.gerichte || standardGerichte)[k].text === m.name
+      )
+      if (gerichtKey) selectEl.value = gerichtKey
+    }
+  })
+
+  // Woche setzen
+  const wocheEl = document.getElementById('woche')
+  if (wocheEl) wocheEl.value = woche
+}
+
+function wizardDownload(id, label) {
+  const canvas = wizardCanvases[id]
+  if (!canvas) { showToast('Bitte zuerst Vorschau laden'); return }
+  const a = document.createElement('a')
+  a.href = canvas.toDataURL('image/png')
+  a.download = `mittagstisch-${id}-${Date.now()}.png`
+  a.click()
+  showToast(`${label} heruntergeladen ✓`)
+}
+
+function buildWizardCaption() {
   const active = Object.keys(state.days).filter(d => state.days[d])
   const woche  = document.getElementById('woche-input')?.value || ''
-
-  let caption = `🍽️ Unser Mittagstisch diese Woche\n\n`
+  let caption  = `🍽️ Unser Mittagstisch diese Woche\n\n`
   if (woche) caption += `📅 ${woche}\n\n`
-
   active.forEach(day => {
     caption += `${dayNames[day]}:\n`
     ;(state.meals[day] || []).forEach(m => {
@@ -1134,40 +1268,14 @@ function buildPreview() {
     caption += '\n'
   })
   caption += `Wir freuen uns auf euren Besuch! 🥩\n\n#mittagstisch #metzgerei #regional #frischgekocht`
+  const el = document.getElementById('caption-output')
+  if (el) el.value = caption
+}
 
-  document.getElementById('caption-output').value = caption
-
-  // Simple canvas placeholder previews
-  ;['story', 'feed'].forEach(type => {
-    const wrap = document.getElementById(`prev-${type}`)
-    wrap.innerHTML = `
-      <canvas id="canvas-${type}" style="width:100%;height:100%;border-radius:6px;"></canvas>`
-    const canvas = document.getElementById(`canvas-${type}`)
-    canvas.width  = type === 'story' ? 1080 : 1080
-    canvas.height = type === 'story' ? 1920 : 1080
-    const ctx = canvas.getContext('2d')
-    ctx.fillStyle = '#1a1714'
-    ctx.fillRect(0,0,canvas.width,canvas.height)
-    ctx.fillStyle = '#d4853a'
-    ctx.font = 'bold 80px Syne, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.fillText('MetzgerPost', canvas.width/2, canvas.height/2 - 60)
-    ctx.fillStyle = '#8a8070'
-    ctx.font = '48px DM Sans, sans-serif'
-    ctx.fillText(woche || 'Mittagstisch', canvas.width/2, canvas.height/2 + 20)
-
-    // Meals
-    ctx.fillStyle = '#f0ece4'
-    ctx.font = '38px DM Sans, sans-serif'
-    let y = canvas.height/2 + 120
-    active.slice(0,4).forEach(day => {
-      const m = (state.meals[day] || [])[0]
-      if (m?.name) {
-        ctx.fillText(`${dayNames[day].substring(0,2)}: ${m.name.substring(0,25)}`, canvas.width/2, y)
-        y += 70
-      }
-    })
-  })
+function copyWizardCaption() {
+  const el = document.getElementById('caption-output')
+  if (!el) return
+  navigator.clipboard.writeText(el.value).then(() => showToast('Caption kopiert! ✓'))
 }
 
 function copyCaption() {
