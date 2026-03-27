@@ -404,6 +404,26 @@
     .toast.show { transform: translateX(-50%) translateY(0); }
 
 
+    /* ── Format Karten (Schritt 1) ── */
+    .format-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface2);
+    }
+    .format-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .format-card.selected {
+      border-color: var(--accent);
+      background: rgba(212,133,58,0.08);
+    }
+    .format-icon { font-size: 36px; margin-bottom: 12px; }
+    .format-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .format-desc { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+    .format-sub  { font-size: 11px; color: var(--border2); }
+
     /* ── Template Picker Grid ── */
     .template-picker-grid {
       display: grid;
@@ -577,66 +597,35 @@
     </div>
   </div>
 
-  <!-- ══ SCHRITT 1: Vorlage ══ -->
+  <!-- ══ SCHRITT 1: Format ══ -->
   <div class="wizard-step active" id="step1">
     <div class="card">
-      <div class="card-title">Vorlage wählen</div>
-      <div class="card-sub">Wähle ein fertiges Layout oder lade dein eigenes hoch</div>
+      <div class="card-title">Was möchtest du erstellen?</div>
+      <div class="card-sub">Wähle das Format für deinen Mittagstisch</div>
 
-      <div class="template-grid">
-        <div class="template-card selected" onclick="selectTemplate('instagram_story', this)">
-          <div class="template-thumb">📱</div>
-          <div class="template-name">Instagram Story</div>
-          <div class="template-desc">9:16 Hochformat</div>
-          <span class="template-badge free">Gratis</span>
-        </div>
-        <div class="template-card" onclick="selectTemplate('instagram_feed', this)">
-          <div class="template-thumb square">🖼️</div>
-          <div class="template-name">Instagram Feed</div>
-          <div class="template-desc">4:5 Querformat</div>
-          <span class="template-badge free">Gratis</span>
-        </div>
-        <div class="template-card" onclick="selectTemplate('print_a4', this)">
-          <div class="template-thumb landscape">🖨️</div>
-          <div class="template-name">Druck A4</div>
-          <div class="template-desc">Tischaufsteller</div>
-          <span class="template-badge free">Gratis</span>
-        </div>
-        <div class="template-card" onclick="selectTemplate('story_modern', this)">
-          <div class="template-thumb">✨</div>
-          <div class="template-name">Story Modern</div>
-          <div class="template-desc">Modernes Design</div>
-          <span class="template-badge">Plus</span>
-        </div>
-        <div class="template-card" onclick="selectTemplate('feed_elegant', this)">
-          <div class="template-thumb square">🎨</div>
-          <div class="template-name">Feed Elegant</div>
-          <div class="template-desc">Eleganter Stil</div>
-          <span class="template-badge">Plus</span>
-        </div>
-        <div class="template-card" onclick="selectTemplate('custom', this)">
-          <div class="template-thumb" style="background:var(--surface); border: 1.5px dashed var(--border2);">➕</div>
-          <div class="template-name">Eigenes Layout</div>
-          <div class="template-desc">PNG/JPG hochladen</div>
-          <span class="template-badge">Pro</span>
-        </div>
-      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top:8px;">
 
-      <!-- Logo Upload -->
-      <div style="margin-top: 8px;">
-        <div style="font-size:13px; font-weight:600; margin-bottom:10px; color: var(--muted);">EIGENES LOGO (OPTIONAL)</div>
-        <div class="upload-zone" id="logo-zone" onclick="document.getElementById('logo-input').click()"
-          ondragover="dragOver(event,'logo-zone')" ondragleave="dragLeave('logo-zone')" ondrop="dropFile(event,'logo')">
-          <input type="file" id="logo-input" accept="image/*" onchange="handleLogoUpload(this.files[0])">
-          <div class="upload-icon">🏷️</div>
-          <div class="upload-text">Logo hochladen</div>
-          <div class="upload-sub">PNG mit Transparenz empfohlen</div>
+        <div class="format-card selected" id="fmt-instagram" onclick="selectFormat('mittagstisch_instagram', this)">
+          <div class="format-icon">📱</div>
+          <div class="format-name">Instagram</div>
+          <div class="format-desc">Story + Feed</div>
+          <div class="format-sub">9:16 & 4:5</div>
         </div>
-        <div class="upload-preview" id="logo-preview">
-          <img id="logo-preview-img" src="" alt="Logo">
-          <div class="upload-preview-name" id="logo-preview-name"></div>
-          <button class="upload-preview-remove" onclick="removeLogo()">Entfernen</button>
+
+        <div class="format-card" id="fmt-druck" onclick="selectFormat('mittagstisch_druck', this)">
+          <div class="format-icon">🖨️</div>
+          <div class="format-name">Druck A4</div>
+          <div class="format-desc">Vorder- & Rückseite</div>
+          <div class="format-sub">Tischaufsteller</div>
         </div>
+
+        <div class="format-card" id="fmt-beide" onclick="selectFormat('beide', this)">
+          <div class="format-icon">✨</div>
+          <div class="format-name">Alles</div>
+          <div class="format-desc">Instagram + Druck</div>
+          <div class="format-sub">Komplett-Paket</div>
+        </div>
+
       </div>
     </div>
 
@@ -795,6 +784,7 @@
 /* ══ State ══ */
 const state = {
   template: 'instagram_story',
+  format: 'mittagstisch_instagram',
   selectedTemplate: null,
   selectedLayoutKey: null,
   selectedFormat: null,
@@ -839,12 +829,27 @@ function goTo(step) {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-/* ══ Step 1: Template ══ */
-function selectTemplate(id, el) {
-  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'))
+/* ══ Step 1: Format ══ */
+function selectFormat(format, el) {
+  document.querySelectorAll('.format-card').forEach(c => c.classList.remove('selected'))
   el.classList.add('selected')
-  state.template = id
+  state.format = format
+  // Vorauswahl für Layout-Step
+  if (format === 'mittagstisch_instagram') {
+    state.selectedLayoutKey = 'mittagstisch_instagram'
+    state.selectedFormat    = 'story'
+    state.selectedTemplate  = 'mittagstisch_instagram_story'
+  } else if (format === 'mittagstisch_druck') {
+    state.selectedLayoutKey = 'mittagstisch_druck'
+    state.selectedFormat    = 'front'
+    state.selectedTemplate  = 'mittagstisch_druck_front'
+  } else if (format === 'beide') {
+    state.selectedLayoutKey = 'beide'
+    state.selectedFormat    = 'all'
+    state.selectedTemplate  = null
+  }
 }
+function selectTemplate(id, el) {} // Legacy-Stub
 
 function handleLogoUpload(file) {
   if (!file) return
