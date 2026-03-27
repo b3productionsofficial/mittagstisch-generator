@@ -347,7 +347,7 @@ function seedDemoIfEmpty() {
   const demos = [
     {
       id: 'demo-1',
-      name: 'Metzgerei Götz — Mittagstisch',
+      name: 'Metzgerei Sorg & Seitz — Mittagstisch',
       template: 'instagram_story',
       templateLabel: 'Story + Feed + Druck',
       days: { dienstag:true, mittwoch:true, donnerstag:true, freitag:true },
@@ -507,14 +507,8 @@ function useDesign(id) {
   // Speichere aktuellen Design-State für Wizard
   localStorage.setItem('mp_active_design', JSON.stringify(design))
 
-  // Für bestehendes Design: alten Generator nutzen
-  // Demo-Design und Metzgerei Götz → alter Generator
-  if (id === 'demo-1' || (design && design.template === 'instagram_story')) {
-    window.location.href = 'index.html?kunde=metzgereigoetz'
-    return
-  }
-  // Gehe direkt zu Schritt 3 im Wizard
-  window.location.href = 'wizard.html?step=3&design=' + id
+  // Alten Generator öffnen mit richtigem Kunden
+  window.location.href = 'index.html?kunde=sorgundseitz'
 }
 
 /* ══ Delete Design ══ */
