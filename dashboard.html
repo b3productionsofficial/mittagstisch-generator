@@ -354,7 +354,7 @@ function seedDemoIfEmpty() {
       mealsPerDay: { dienstag:1, mittwoch:1, donnerstag:1, freitag:1 },
       logo: null,
       createdAt: Date.now() - 1000*60*60*24*7,
-      lastUsed: Date.now() - 1000*60*60*24*3,
+      lastUsed: Date.now(),
     }
   ]
   localStorage.setItem(DESIGNS_KEY, JSON.stringify(demos))
