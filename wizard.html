@@ -402,6 +402,44 @@
     .toast.show { transform: translateX(-50%) translateY(0); }
 
 
+    /* ── Template Picker Grid ── */
+    .template-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+    .template-picker-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface2);
+      position: relative;
+    }
+    .template-picker-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .template-picker-card.selected { border-color: var(--accent); }
+    .template-picker-card.selected::after {
+      content: '✓';
+      position: absolute; top: 8px; right: 10px;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .template-picker-thumb {
+      width: 100%; aspect-ratio: 9/16;
+      object-fit: cover; display: block;
+    }
+    .template-picker-thumb.landscape { aspect-ratio: 16/9; }
+    .template-picker-thumb.square { aspect-ratio: 1/1; }
+    .template-picker-info {
+      padding: 10px 12px;
+    }
+    .template-picker-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+    .template-picker-desc { font-size: 11px; color: var(--muted); }
+
     /* ── Gerichte Picker Modal ── */
     .picker-modal {
       display: none; position: fixed; inset: 0;
@@ -504,7 +542,7 @@
     <div class="step-item">
       <div class="step-bubble active" id="s1">
         <span>1</span>
-        <span class="step-label">Vorlage</span>
+        <span class="step-label">Format</span>
       </div>
     </div>
     <div class="step-line" id="l1"></div>
@@ -525,6 +563,13 @@
     <div class="step-item">
       <div class="step-bubble" id="s4">
         <span>4</span>
+        <span class="step-label">Layout</span>
+      </div>
+    </div>
+    <div class="step-line" id="l4"></div>
+    <div class="step-item">
+      <div class="step-bubble" id="s5">
+        <span>5</span>
         <span class="step-label">Export</span>
       </div>
     </div>
@@ -656,12 +701,45 @@
 
     <div class="wizard-nav">
       <button class="btn-back" onclick="goTo(2)">← Zurück</button>
-      <button class="btn-next" onclick="goTo(4)">Weiter → Vorschau & Export</button>
+      <button class="btn-next" onclick="goTo(4)">Weiter → Layout wählen</button>
     </div>
   </div>
 
-  <!-- ══ SCHRITT 4: Export ══ -->
+  <!-- ══ SCHRITT 4: Layout & Template ══ -->
   <div class="wizard-step" id="step4">
+    <div class="card">
+      <div class="card-title">Layout & Template wählen</div>
+      <div class="card-sub">Wähle ein fertiges Template als Basis für dein Design</div>
+
+      <div class="template-picker-grid" id="template-picker-grid">
+        <!-- Wird per JS befüllt -->
+      </div>
+
+      <div style="margin-top:28px; border-top: 1px solid var(--border); padding-top:20px;">
+        <div style="font-size:13px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px;">Oder eigenes Template hochladen</div>
+        <div class="upload-zone" id="template-upload-zone" onclick="document.getElementById('template-file-input').click()"
+          ondragover="dragOver(event,'template-upload-zone')" ondragleave="dragLeave('template-upload-zone')">
+          <input type="file" id="template-file-input" accept="image/*" onchange="handleTemplateUpload(this.files[0])" style="display:none">
+          <div class="upload-icon">🖼️</div>
+          <div class="upload-text">Template hochladen</div>
+          <div class="upload-sub">JPG oder PNG — dein eigenes Design als Basis</div>
+        </div>
+        <div class="upload-preview" id="template-preview">
+          <img id="template-preview-img" src="" alt="Template">
+          <div class="upload-preview-name" id="template-preview-name"></div>
+          <button class="upload-preview-remove" onclick="removeTemplate()">Entfernen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goTo(3)">← Zurück</button>
+      <button class="btn-next" onclick="goTo(5)">Weiter → Export</button>
+    </div>
+  </div>
+
+  <!-- ══ SCHRITT 5: Export ══ -->
+  <div class="wizard-step" id="step5">
     <div class="card">
       <div class="card-title">Vorschau & Export</div>
       <div class="card-sub">Alles gut? Dann lade deine Bilder herunter.</div>
@@ -697,7 +775,7 @@
     </div>
 
     <div class="wizard-nav">
-      <button class="btn-back" onclick="goTo(3)">← Zurück</button>
+      <button class="btn-back" onclick="goTo(4)">← Zurück</button>
       <button class="btn-next" onclick="newWeek()" style="background:var(--success);">+ Neue Woche</button>
     </div>
   </div>
@@ -726,6 +804,10 @@
 /* ══ State ══ */
 const state = {
   template: 'instagram_story',
+  selectedTemplate: null,
+  selectedLayoutKey: null,
+  selectedFormat: null,
+  customTemplate: null,
   logo: null,
   days: { montag: false, dienstag: true, mittwoch: true, donnerstag: true, freitag: true },
   mealsPerDay: { montag: 1, dienstag: 1, mittwoch: 1, donnerstag: 1, freitag: 1 },
@@ -744,20 +826,22 @@ function goTo(step) {
   document.getElementById(`step${state.currentStep}`).classList.remove('active')
 
   // Mark done
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const b = document.getElementById(`s${i}`)
     b.classList.remove('active','done')
     if (i < step)       b.classList.add('done')
     else if (i === step) b.classList.add('active')
   }
-  for (let i = 1; i <= 3; i++) {
-    document.getElementById(`l${i}`).classList.toggle('done', i < step)
+  for (let i = 1; i <= 4; i++) {
+    const line = document.getElementById(`l${i}`)
+    if (line) line.classList.toggle('done', i < step)
   }
 
   // Prep step content
   if (step === 2) buildDaysDetail()
   if (step === 3) buildMealsPanels()
-  if (step === 4) buildPreview()
+  if (step === 4) buildLayoutStep()
+  if (step === 5) buildPreview()
 
   state.currentStep = step
   document.getElementById(`step${step}`).classList.add('active')
@@ -932,6 +1016,105 @@ function saveMealField(day, idx, field, val) {
 
 function generateImage(day, idx) {
   showToast('KI-Bildgenerierung ist im Plus-Paket verfügbar 🚀')
+}
+
+/* ══ Step 4: Layout & Template ══ */
+function buildLayoutStep() {
+  const grid = document.getElementById('template-picker-grid')
+  if (!grid) return
+
+  // Templates aus config.js laden
+  const templates = []
+
+  // Aus kundenLayouts alle Templates sammeln
+  if (typeof kundenLayouts !== 'undefined') {
+    const kunde = 'sorgundseitz'
+    const layouts = kundenLayouts[kunde] || {}
+
+    Object.keys(layouts).forEach(layoutKey => {
+      Object.keys(layouts[layoutKey]).forEach(format => {
+        const layoutData = layouts[layoutKey][format]
+        if (!layoutData.template) return
+
+        let aspect = 'portrait'
+        if (format === 'feed') aspect = 'square'
+        if (format === 'front' || format === 'back') aspect = 'landscape'
+
+        const labels = {
+          'mittagstisch_instagram': 'Instagram',
+          'mittagstisch_druck': 'Druck A4'
+        }
+        const formatLabels = {
+          'story': 'Story (9:16)',
+          'feed': 'Feed (4:5)',
+          'front': 'Vorderseite',
+          'back': 'Rückseite'
+        }
+
+        templates.push({
+          id: `${layoutKey}_${format}`,
+          layoutKey,
+          format,
+          src: layoutData.template,
+          name: `${labels[layoutKey] || layoutKey} — ${formatLabels[format] || format}`,
+          aspect
+        })
+      })
+    })
+  }
+
+  grid.innerHTML = ''
+
+  templates.forEach(t => {
+    const isSelected = state.selectedTemplate === t.id
+    const card = document.createElement('div')
+    card.className = 'template-picker-card' + (isSelected ? ' selected' : '')
+    card.innerHTML = `
+      <img class="template-picker-thumb ${t.aspect === 'landscape' ? 'landscape' : t.aspect === 'square' ? 'square' : ''}"
+           src="${t.src}" alt="${t.name}"
+           onerror="this.style.background='var(--surface)';this.style.height='120px'">
+      <div class="template-picker-info">
+        <div class="template-picker-name">${t.name}</div>
+        <div class="template-picker-desc">${t.aspect === 'landscape' ? 'Querformat' : t.aspect === 'square' ? 'Quadrat' : 'Hochformat'}</div>
+      </div>`
+    card.onclick = () => {
+      state.selectedTemplate = t.id
+      state.selectedLayoutKey = t.layoutKey
+      state.selectedFormat = t.format
+      document.querySelectorAll('.template-picker-card').forEach(c => c.classList.remove('selected'))
+      card.classList.add('selected')
+      showToast(`${t.name} ausgewählt ✓`)
+    }
+    grid.appendChild(card)
+  })
+
+  // Ersten automatisch auswählen
+  if (!state.selectedTemplate && templates.length > 0) {
+    state.selectedTemplate = templates[0].id
+    state.selectedLayoutKey = templates[0].layoutKey
+    state.selectedFormat = templates[0].format
+    grid.querySelector('.template-picker-card')?.classList.add('selected')
+  }
+}
+
+function handleTemplateUpload(file) {
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = e => {
+    state.customTemplate = e.target.result
+    document.getElementById('template-preview-img').src = e.target.result
+    document.getElementById('template-preview-name').textContent = file.name
+    document.getElementById('template-preview').classList.add('visible')
+    document.getElementById('template-upload-zone').style.display = 'none'
+    showToast('Template hochgeladen ✓')
+  }
+  reader.readAsDataURL(file)
+}
+
+function removeTemplate() {
+  state.customTemplate = null
+  document.getElementById('template-preview').classList.remove('visible')
+  document.getElementById('template-upload-zone').style.display = 'block'
 }
 
 /* ══ Step 4: Preview & Export ══ */
