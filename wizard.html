@@ -1044,11 +1044,16 @@ function renderPickerList(query) {
     return
   }
 
-  list.innerHTML = filtered.map(g => `
-    <div class="picker-item" onclick="selectGericht(${JSON.stringify(g.text)}, ${JSON.stringify(g.preis || '')})">
+  list.innerHTML = filtered.map((g,i) => `
+    <div class="picker-item" data-name="${(g.text||'').replace(/"/g,'&quot;')}" data-preis="${(g.preis||'').replace(/"/g,'&quot;')}">
       <div class="picker-item-name">${g.text}</div>
       <div class="picker-item-price">${g.preis || ''}</div>
     </div>`).join('')
+
+  // Event delegation statt inline onclick
+  list.querySelectorAll('.picker-item').forEach(el => {
+    el.addEventListener('click', () => selectGericht(el.dataset.name, el.dataset.preis))
+  })
 }
 
 function filterPicker(query) {
