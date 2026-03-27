@@ -1,5 +1,29 @@
-const kunden = {
+const standardGerichte = {
+  schlachtschuessel: { bild: "Gerichte/schlachtschuessel.jpg", preis: "ab 5,00 €", text: "Schlachtschüssel" },
+  kotelett: { bild: "Gerichte/kotelett.jpg", preis: "6,80 €", text: "Kotelett mit Kartoffelsalat" },
+  fleischteller: { bild: "Gerichte/fleischteller.jpg", preis: "€ pro 100g", text: "Schnitzel, Bratwürste, Frikadelle und Fleischkäse mit Kartoffelsalat" },
+  schaeufele: { bild: "Gerichte/schaeufele.jpg", preis: "8,50 €", text: "Schäufele mit Knödel" },
+  cordonbleu: { bild: "Gerichte/cordonbleu.jpg", preis: "6,80 €", text: "Cordon Bleu mit Kartoffelsalat" },
+  gyros: { bild: "Gerichte/gyros.jpg", preis: "6,80 €", text: "Gyros mit Krautsalat und Zaziki" },
+  schweinebraten: { bild: "Gerichte/schweinebraten.jpg", preis: "8,50 €", text: "Schweinebraten mit Knödel" },
+  schaschlik: { bild: "Gerichte/schaschlik.jpg", preis: "8,50 €", text: "Schaschlik mit Semmel" },
+  gulasch: { bild: "Gerichte/gulasch.jpg", preis: "6,80 €", text: "Gulasch mit Spätzle" },
+  rouladen: { bild: "Gerichte/rouladen.jpg", preis: "8,50 €", text: "Rouladen mit Spätzle" },
+  backfisch: { bild: "Gerichte/backfisch.jpg", preis: "6,80 €", text: "Backfisch mit Kartoffelsalat" },
+  spaghetti: { bild: "Gerichte/spaghetti.jpg", preis: "6,80 €", text: "Spaghetti Bolognese" },
+  backschinken: { bild: "Gerichte/backschinken.jpg", preis: "8,50 €", text: "Backschinken mit Kartoffelsalat" },
+  zwiebelrostbraten: { bild: "Gerichte/zwiebelrostbraten.jpg", preis: "10,50 €", text: "Zwiebelrostbraten mit Spätzle" },
+  lende: { bild: "Gerichte/lende.jpg", preis: "8,50 €", text: "Lende mit Rahmsauce und Spätzle" },
+  kuemmelbraten: { bild: "Gerichte/kuemmelbraten.jpg", preis: "8,50 €", text: "Kümmelbraten mit Semmelknödel" },
+  currywurst: { bild: "Gerichte/currywurst.jpg", preis: "6,80 €", text: "Currywurst mit Semmel" },
+  hackbraten: { bild: "Gerichte/hackbraten.jpg", preis: "8,50 €", text: "Hackbraten mit Kartoffeln und Gemüse" },
+  karpfenfilet: { bild: "Gerichte/karpfenfilet.jpg", preis: "8,50 €", text: "Karpfenfilet mit Kartoffelsalat" },
+  krautwickel: { bild: "Gerichte/krautwickel.jpg", preis: "8,50 €", text: "Krautwickel mit Kartoffeln" },
+  lasagne: { bild: "Gerichte/lasagne.jpg", preis: "6,80 €", text: "Lasagne" },
+  rindfleisch_meerrettich: { bild: "Gerichte/rindfleisch_meerrettich.jpg", preis: "8,50 €", text: "Rindfleisch mit Kartoffelsalat und Meerrettich" }
+}
 
+const kunden = {
   sorgundseitz: {
     name: "Metzgerei Sorg & Seitz",
     layouts: ["mittagstisch", "catering"]
@@ -13,14 +37,23 @@ const kunden = {
   erkenbrecher: {
     name: "Schreinerei Erkenbrecher",
     layouts: ["referenzen"]
-  }
-
+  },
+  metzgereigoetz: {
+    name: "Metzgerei Götz",
+    layouts: ["mittagstisch"]
+}
 }
 
 
+const kundenGerichte = {
+  sorgundseitz: standardGerichte,
+  schilling: {},
+  erkenbrecher: {},
+  metzgereigoetz: standardGerichte
+}
+
 const kundenLayouts = {
   sorgundseitz: {
-
     mittagstisch_instagram: {
       feed: {
         template: "templates/klassisch-feed.jpg",
@@ -82,7 +115,7 @@ const kundenLayouts = {
           freitag: {
             imageX: 805, imageY: 1275, imageRadius: 105,
             textX: 810, textY: 1500, textMaxWidth: 400, textLineHeight: 30,
-            priceX: 810, priceY: 1650, priceColor: "#ffffff",
+            priceX: 810, priceY: 1475, priceColor: "#ffffff",
             textFontSize: 32, priceFontSize: 32
           }
         }
@@ -130,7 +163,7 @@ const kundenLayouts = {
             freitag: {
               imageX: 1310, imageY: 1335, imageRadius: 145,
               textX: 1310, textY: 1700, textMaxWidth: 420, textLineHeight: 54,
-              priceX: 1315, priceY: 1970, priceColor: "#ffffff",
+              priceX: 1240, priceY: 2050, priceColor: "#ffffff",
               textFontSize: 56, priceFontSize: 60
             }
           }
@@ -167,7 +200,124 @@ const kundenLayouts = {
         }
       }
     }
+  }
 
+}
+
+kundenLayouts.metzgereigoetz = JSON.parse(JSON.stringify(kundenLayouts.sorgundseitz))
+
+kundenLayouts.metzgereigoetz.tagesgerichte_feed_text = {
+  feed: {
+    template: "templates/goetz-tagesgerichte-feed.jpg",
+    width: 1080,
+    height: 1080,
+
+    tage: {
+      montag: {
+        titleX: 70,
+        titleY: 170,
+        titleFontSize: 30,
+
+        meal1X: 70,
+        meal1Y: 230,
+        price1X: 950,
+        price1Y: 220,
+
+        meal2X: 70,
+        meal2Y: 280,
+        price2X: 950,
+        price2Y: 265,
+
+        meal3X: 70,
+        meal3Y: 330,
+        price3X: 950,
+        price3Y: 310
+      },
+
+      dienstag: {
+        titleX: 70,
+        titleY: 390,
+        titleFontSize: 30,
+
+        meal1X: 70,
+        meal1Y: 440,
+        price1X: 950,
+        price1Y: 440,
+
+        meal2X: 70,
+        meal2Y: 485,
+        price2X: 950,
+        price2Y: 485,
+
+        meal3X: 70,
+        meal3Y: 530,
+        price3X: 950,
+        price3Y: 530
+      },
+
+      mittwoch: {
+        titleX: 70,
+        titleY: 610,
+        titleFontSize: 30,
+
+        meal1X: 70,
+        meal1Y: 660,
+        price1X: 950,
+        price1Y: 660,
+
+        meal2X: 70,
+        meal2Y: 705,
+        price2X: 950,
+        price2Y: 705,
+
+        meal3X: 70,
+        meal3Y: 750,
+        price3X: 950,
+        price3Y: 750
+      },
+
+      donnerstag: {
+        titleX: 70,
+        titleY: 830,
+        titleFontSize: 30,
+
+        meal1X: 70,
+        meal1Y: 880,
+        price1X: 950,
+        price1Y: 880,
+
+        meal2X: 70,
+        meal2Y: 925,
+        price2X: 950,
+        price2Y: 925,
+
+        meal3X: 70,
+        meal3Y: 970,
+        price3X: 950,
+        price3Y: 970
+      },
+
+      freitag: {
+        titleX: 70,
+        titleY: 1050,
+        titleFontSize: 30,
+
+        meal1X: 70,
+        meal1Y: 1100,
+        price1X: 950,
+        price1Y: 1100,
+
+        meal2X: 70,
+        meal2Y: 1145,
+        price2X: 950,
+        price2Y: 1145,
+
+        meal3X: 70,
+        meal3Y: 1190,
+        price3X: 950,
+        price3Y: 1190
+      }
+    }
   }
 }
 
@@ -187,5 +337,13 @@ const generatorVorlagen = {
 
   schilling: {},
 
-  erkenbrecher: {}
+  erkenbrecher: {},
+
+   metzgereigoetz: {
+    tagesgerichte_feed_text: {
+     name: "Tagesgerichte Feed",
+     layout: "tagesgerichte_feed_text",
+     formats: ["feed"]
+  }
+}
 }

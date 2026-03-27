@@ -4,6 +4,19 @@
   <meta charset="UTF-8" />
   <title>MetzgerPost Admin</title>
 
+  <!-- ── Auth Guard ── -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    (async () => {
+      const SUPABASE_URL  = 'https://jfrqbchgrpixwlecerax.supabase.co'
+      const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmcnFiY2hncnBpeHdsZWNlcmF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODk5NDksImV4cCI6MjA5MDE2NTk0OX0.AnSqi2rJ46PN8dm6zMUgRDNMdXlwRRaES4JQ4Fozn10'
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+      const { data: { session } } = await sb.auth.getSession()
+      if (!session) window.location.replace('auth.html')
+    })()
+  </script>
+  <!-- ── Ende Auth Guard ── -->
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -140,6 +153,7 @@
     <option value="sorgundseitz">Metzgerei Sorg &amp; Seitz</option>
     <option value="schilling">Motorrad Schilling</option>
     <option value="erkenbrecher">Schreinerei Erkenbrecher</option>
+    <option value="metzgereigoetz">Metzgerei Götz</option>
   </select>
 
   <div id="gerichte-container"></div>
@@ -176,10 +190,19 @@
       <div id="tag-wrap">
         <label for="tag-auswahl">Tag</label>
         <select id="tag-auswahl" onchange="ladePositionsWerte(); renderAdminPreview();">
+          <option value="montag">Montag</option>
           <option value="dienstag">Dienstag</option>
           <option value="mittwoch">Mittwoch</option>
           <option value="donnerstag">Donnerstag</option>
           <option value="freitag">Freitag</option>
+        </select>
+      </div>
+      <div id="line-wrap">
+        <label for="line-auswahl">Zeile</label>
+        <select id="line-auswahl" onchange="ladePositionsWerte(); renderAdminPreview();">
+          <option value="1">Zeile 1</option>
+          <option value="2">Zeile 2</option>
+          <option value="3">Zeile 3</option>
         </select>
       </div>
 
@@ -284,10 +307,7 @@
   </div>
 
   <script>
-    const passwort = prompt("Admin Passwort eingeben")
-    if (passwort !== "metzger123") {
-      document.body.innerHTML = "<h2>Kein Zugriff</h2>"
-    }
+    // Passwort-Schutz entfernt — Login läuft jetzt über auth.html / Supabase
   </script>
 
   <script src="config.js"></script>

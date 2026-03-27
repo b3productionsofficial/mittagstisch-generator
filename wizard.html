@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MetzgerPost — Mittagstisch erstellen</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:       #0f0d0b;
+      --surface:  #1a1714;
+      --surface2: #242018;
+      --border:   #2e2a24;
+      --border2:  #3d3830;
+      --accent:   #d4853a;
+      --accent2:  #e8a055;
+      --text:     #f0ece4;
+      --muted:    #8a8070;
+      --error:    #e05555;
+      --success:  #5cad7a;
+      --radius:   12px;
+      --radius-sm:8px;
+      --font-d:   'Syne', sans-serif;
+      --font-b:   'DM Sans', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-b);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 10% 20%, rgba(212,133,58,0.10) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 90% 80%, rgba(212,133,58,0.06) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── Top Nav ── */
+    .topnav {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15,13,11,0.8);
+      backdrop-filter: blur(10px);
+    }
+    .nav-logo { font-family: var(--font-d); font-size: 20px; font-weight: 800; }
+    .nav-logo span { color: var(--accent); }
+    .nav-user { display: flex; align-items: center; gap: 12px; }
+    .nav-user-name { font-size: 13px; color: var(--muted); }
+    .btn-nav {
+      padding: 7px 14px; font-family: var(--font-b); font-size: 13px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background: transparent; color: var(--muted); cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-nav:hover { border-color: var(--border2); color: var(--text); }
+
+    /* ── Main Layout ── */
+    .main {
+      position: relative; z-index: 1;
+      max-width: 860px; margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* ── Progress Steps ── */
+    .steps {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0; margin-bottom: 48px;
+    }
+    .step-item {
+      display: flex; align-items: center; gap: 0;
+    }
+    .step-bubble {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1.5px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      background: var(--surface); transition: all 0.3s; position: relative;
+      cursor: default;
+    }
+    .step-bubble.active {
+      border-color: var(--accent); color: var(--accent);
+      background: rgba(212,133,58,0.10);
+    }
+    .step-bubble.done {
+      border-color: var(--success); background: rgba(92,173,122,0.15);
+      color: var(--success);
+    }
+    .step-label {
+      font-size: 11px; color: var(--muted); position: absolute;
+      top: 42px; left: 50%; transform: translateX(-50%);
+      white-space: nowrap; font-weight: 500;
+      transition: color 0.3s;
+    }
+    .step-bubble.active .step-label { color: var(--accent); }
+    .step-bubble.done  .step-label  { color: var(--success); }
+    .step-line {
+      width: 80px; height: 1px; background: var(--border);
+      transition: background 0.3s;
+    }
+    .step-line.done { background: var(--success); }
+
+    /* ── Cards ── */
+    .wizard-step { display: none; animation: fadeUp 0.35s ease both; }
+    .wizard-step.active { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-family: var(--font-d); font-size: 22px; font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .card-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+    /* ── Template Grid ── */
+    .template-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;
+      margin-bottom: 24px;
+    }
+    .template-card {
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      padding: 16px 14px; cursor: pointer; transition: all 0.2s;
+      background: var(--surface2); position: relative;
+    }
+    .template-card:hover { border-color: var(--border2); }
+    .template-card.selected { border-color: var(--accent); background: rgba(212,133,58,0.07); }
+    .template-card.selected::after {
+      content: '✓'; position: absolute; top: 10px; right: 12px;
+      font-size: 13px; font-weight: 600; color: var(--accent);
+    }
+    .template-thumb {
+      width: 100%; aspect-ratio: 9/16; background: var(--border);
+      border-radius: 6px; margin-bottom: 10px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+    }
+    .template-thumb.landscape { aspect-ratio: 4/3; }
+    .template-thumb.square    { aspect-ratio: 1/1; }
+    .template-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+    .template-desc { font-size: 11px; color: var(--muted); }
+    .template-badge {
+      display: inline-block; font-size: 10px; font-weight: 600;
+      padding: 2px 7px; border-radius: 20px; margin-top: 6px;
+      background: rgba(212,133,58,0.15); color: var(--accent);
+      border: 1px solid rgba(212,133,58,0.3);
+    }
+    .template-badge.free { background: rgba(92,173,122,0.15); color: var(--success); border-color: rgba(92,173,122,0.3); }
+
+    /* Upload Zone */
+    .upload-zone {
+      border: 1.5px dashed var(--border2); border-radius: var(--radius-sm);
+      padding: 28px; text-align: center; cursor: pointer;
+      transition: all 0.2s; background: var(--surface2);
+    }
+    .upload-zone:hover { border-color: var(--accent); }
+    .upload-zone.dragover { border-color: var(--accent); background: rgba(212,133,58,0.07); }
+    .upload-icon { font-size: 28px; margin-bottom: 8px; }
+    .upload-text { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .upload-sub  { font-size: 12px; color: var(--muted); }
+    .upload-zone input { display: none; }
+    .upload-preview {
+      display: none; margin-top: 14px;
+      align-items: center; gap: 12px;
+    }
+    .upload-preview.visible { display: flex; }
+    .upload-preview img {
+      width: 48px; height: 48px; border-radius: 8px; object-fit: contain;
+      background: var(--surface); border: 1px solid var(--border);
+    }
+    .upload-preview-name { font-size: 13px; font-weight: 500; }
+    .upload-preview-remove {
+      margin-left: auto; font-size: 12px; color: var(--error);
+      cursor: pointer; background: none; border: none; font-family: var(--font-b);
+    }
+
+    /* ── Days Grid ── */
+    .days-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+      margin-bottom: 24px;
+    }
+    .day-card {
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      padding: 16px 10px; text-align: center; cursor: pointer;
+      transition: all 0.2s; background: var(--surface2); user-select: none;
+    }
+    .day-card:hover { border-color: var(--border2); }
+    .day-card.selected { border-color: var(--accent); background: rgba(212,133,58,0.08); }
+    .day-card.selected .day-dot { background: var(--accent); }
+    .day-name { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .day-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--border2); margin: 0 auto;
+      transition: background 0.2s;
+    }
+
+    /* Meals count per day */
+    .days-detail { display: none; }
+    .days-detail.visible { display: block; margin-top: 24px; }
+    .day-detail-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); margin-bottom: 10px;
+      background: var(--surface2);
+    }
+    .day-detail-name { font-size: 14px; font-weight: 600; }
+    .count-control { display: flex; align-items: center; gap: 10px; }
+    .count-btn {
+      width: 28px; height: 28px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; font-family: var(--font-b);
+    }
+    .count-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .count-val { font-size: 15px; font-weight: 600; min-width: 20px; text-align: center; }
+
+    /* ── Meals Step ── */
+    .meals-day-tabs {
+      display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .meals-day-tab {
+      padding: 7px 16px; border-radius: 20px;
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--muted); font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .meals-day-tab.active {
+      border-color: var(--accent); color: var(--accent);
+      background: rgba(212,133,58,0.10);
+    }
+
+    .meal-block { display: none; }
+    .meal-block.active { display: block; }
+
+    .meal-item {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 18px; margin-bottom: 12px;
+    }
+    .meal-item-header {
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+    }
+    .meal-fields { display: grid; grid-template-columns: 1fr 140px; gap: 10px; }
+    .meal-fields-full { grid-template-columns: 1fr; }
+
+    .field-wrap label {
+      font-size: 12px; color: var(--muted); font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px; display: block;
+    }
+    input[type="text"], input[type="number"], input[type="email"], input[type="password"], select, textarea {
+      width: 100%; padding: 10px 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      font-family: var(--font-b); font-size: 14px; outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.6; }
+    select option { background: var(--surface2); color: var(--text); }
+
+    .meal-img-row {
+      display: flex; align-items: center; gap: 10px; margin-top: 10px;
+    }
+    .meal-img-thumb {
+      width: 52px; height: 52px; border-radius: 8px; object-fit: cover;
+      border: 1px solid var(--border); background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .meal-img-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 7px; }
+    .btn-gen-img {
+      flex: 1; padding: 9px 14px; font-family: var(--font-b);
+      font-size: 13px; font-weight: 500;
+      border: 1px solid var(--accent); border-radius: var(--radius-sm);
+      background: rgba(212,133,58,0.10); color: var(--accent);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-gen-img:hover { background: rgba(212,133,58,0.18); }
+    .btn-gen-img:disabled { opacity: 0.4; cursor: not-allowed; }
+    .img-badge {
+      font-size: 10px; padding: 2px 7px; border-radius: 20px;
+      background: rgba(212,133,58,0.15); color: var(--accent);
+      border: 1px solid rgba(212,133,58,0.3); white-space: nowrap;
+    }
+
+    /* ── Navigation Buttons ── */
+    .wizard-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 24px;
+    }
+    .btn-back {
+      padding: 12px 24px; font-family: var(--font-b); font-size: 14px; font-weight: 500;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background: transparent; color: var(--muted); cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-back:hover { border-color: var(--border2); color: var(--text); }
+    .btn-next {
+      padding: 13px 32px; font-family: var(--font-b); font-size: 15px; font-weight: 600;
+      border: none; border-radius: var(--radius-sm);
+      background: var(--accent); color: #fff; cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-next:hover  { background: var(--accent2); }
+    .btn-next:active { transform: scale(0.98); }
+
+    /* ── Preview Step ── */
+    .preview-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      margin-bottom: 20px;
+    }
+    .preview-panel {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px;
+    }
+    .preview-label {
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
+    }
+    .preview-canvas-wrap {
+      width: 100%; aspect-ratio: 9/16;
+      background: var(--border); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 13px;
+    }
+    .preview-canvas-wrap.square { aspect-ratio: 1/1; }
+
+    .download-row {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;
+    }
+    .btn-download {
+      flex: 1; min-width: 120px; padding: 12px;
+      font-family: var(--font-b); font-size: 14px; font-weight: 600;
+      border: 1px solid var(--accent); border-radius: var(--radius-sm);
+      background: rgba(212,133,58,0.12); color: var(--accent);
+      cursor: pointer; transition: all 0.2s; text-align: center;
+    }
+    .btn-download:hover { background: rgba(212,133,58,0.22); }
+    .btn-download.primary {
+      background: var(--accent); color: #fff; border-color: var(--accent);
+    }
+    .btn-download.primary:hover { background: var(--accent2); }
+
+    /* Caption */
+    .caption-box {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 18px; margin-top: 16px;
+    }
+    .caption-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .caption-title { font-size: 13px; font-weight: 600; }
+    .btn-copy {
+      font-size: 12px; padding: 5px 12px;
+      border: 1px solid var(--border); border-radius: 20px;
+      background: transparent; color: var(--muted); cursor: pointer;
+      font-family: var(--font-b); transition: all 0.2s;
+    }
+    .btn-copy:hover { border-color: var(--border2); color: var(--text); }
+    .caption-text {
+      font-size: 13px; color: var(--muted); line-height: 1.7;
+      white-space: pre-wrap; resize: vertical; min-height: 120px;
+      border: none; padding: 0; background: transparent; width: 100%;
+    }
+
+    /* Woche bar */
+    .woche-bar {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px 18px; margin-bottom: 16px;
+    }
+    .woche-bar label { font-size: 13px; color: var(--muted); white-space: nowrap; margin: 0; }
+    .woche-bar input { flex: 1; max-width: 260px; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--success); color: #fff; padding: 12px 20px; border-radius: 20px;
+      font-size: 14px; font-weight: 500; z-index: 999;
+      transition: transform 0.3s ease; pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 600px) {
+      .template-grid { grid-template-columns: 1fr 1fr; }
+      .days-grid { grid-template-columns: repeat(3, 1fr); }
+      .preview-grid { grid-template-columns: 1fr; }
+      .meal-fields { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Auth Guard ── -->
+<script>
+(async () => {
+  const SUPABASE_URL  = 'https://jfrqbchgrpixwlecerax.supabase.co'
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmcnFiY2hncnBpeHdsZWNlcmF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODk5NDksImV4cCI6MjA5MDE2NTk0OX0.AnSqi2rJ46PN8dm6zMUgRDNMdXlwRRaES4JQ4Fozn10'
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+  const { data: { session } } = await sb.auth.getSession()
+  if (!session) { window.location.replace('auth.html'); return; }
+  window._sbUser = session.user
+  document.getElementById('nav-username').textContent =
+    session.user.user_metadata?.betrieb_name || session.user.email
+})()
+</script>
+
+<!-- ── Nav ── -->
+<nav class="topnav">
+  <div class="nav-logo">Metzger<span>Post</span></div>
+  <div class="nav-user">
+    <span class="nav-user-name" id="nav-username">…</span>
+    <button class="btn-nav" onclick="window.location.href='auth.html'">Abmelden</button>
+  </div>
+</nav>
+
+<!-- ── Progress Bar ── -->
+<div class="main">
+  <div class="steps">
+    <div class="step-item">
+      <div class="step-bubble active" id="s1">
+        <span>1</span>
+        <span class="step-label">Vorlage</span>
+      </div>
+    </div>
+    <div class="step-line" id="l1"></div>
+    <div class="step-item">
+      <div class="step-bubble" id="s2">
+        <span>2</span>
+        <span class="step-label">Tage</span>
+      </div>
+    </div>
+    <div class="step-line" id="l2"></div>
+    <div class="step-item">
+      <div class="step-bubble" id="s3">
+        <span>3</span>
+        <span class="step-label">Gerichte</span>
+      </div>
+    </div>
+    <div class="step-line" id="l3"></div>
+    <div class="step-item">
+      <div class="step-bubble" id="s4">
+        <span>4</span>
+        <span class="step-label">Export</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCHRITT 1: Vorlage ══ -->
+  <div class="wizard-step active" id="step1">
+    <div class="card">
+      <div class="card-title">Vorlage wählen</div>
+      <div class="card-sub">Wähle ein fertiges Layout oder lade dein eigenes hoch</div>
+
+      <div class="template-grid">
+        <div class="template-card selected" onclick="selectTemplate('instagram_story', this)">
+          <div class="template-thumb">📱</div>
+          <div class="template-name">Instagram Story</div>
+          <div class="template-desc">9:16 Hochformat</div>
+          <span class="template-badge free">Gratis</span>
+        </div>
+        <div class="template-card" onclick="selectTemplate('instagram_feed', this)">
+          <div class="template-thumb square">🖼️</div>
+          <div class="template-name">Instagram Feed</div>
+          <div class="template-desc">4:5 Querformat</div>
+          <span class="template-badge free">Gratis</span>
+        </div>
+        <div class="template-card" onclick="selectTemplate('print_a4', this)">
+          <div class="template-thumb landscape">🖨️</div>
+          <div class="template-name">Druck A4</div>
+          <div class="template-desc">Tischaufsteller</div>
+          <span class="template-badge free">Gratis</span>
+        </div>
+        <div class="template-card" onclick="selectTemplate('story_modern', this)">
+          <div class="template-thumb">✨</div>
+          <div class="template-name">Story Modern</div>
+          <div class="template-desc">Modernes Design</div>
+          <span class="template-badge">Plus</span>
+        </div>
+        <div class="template-card" onclick="selectTemplate('feed_elegant', this)">
+          <div class="template-thumb square">🎨</div>
+          <div class="template-name">Feed Elegant</div>
+          <div class="template-desc">Eleganter Stil</div>
+          <span class="template-badge">Plus</span>
+        </div>
+        <div class="template-card" onclick="selectTemplate('custom', this)">
+          <div class="template-thumb" style="background:var(--surface); border: 1.5px dashed var(--border2);">➕</div>
+          <div class="template-name">Eigenes Layout</div>
+          <div class="template-desc">PNG/JPG hochladen</div>
+          <span class="template-badge">Pro</span>
+        </div>
+      </div>
+
+      <!-- Logo Upload -->
+      <div style="margin-top: 8px;">
+        <div style="font-size:13px; font-weight:600; margin-bottom:10px; color: var(--muted);">EIGENES LOGO (OPTIONAL)</div>
+        <div class="upload-zone" id="logo-zone" onclick="document.getElementById('logo-input').click()"
+          ondragover="dragOver(event,'logo-zone')" ondragleave="dragLeave('logo-zone')" ondrop="dropFile(event,'logo')">
+          <input type="file" id="logo-input" accept="image/*" onchange="handleLogoUpload(this.files[0])">
+          <div class="upload-icon">🏷️</div>
+          <div class="upload-text">Logo hochladen</div>
+          <div class="upload-sub">PNG mit Transparenz empfohlen</div>
+        </div>
+        <div class="upload-preview" id="logo-preview">
+          <img id="logo-preview-img" src="" alt="Logo">
+          <div class="upload-preview-name" id="logo-preview-name"></div>
+          <button class="upload-preview-remove" onclick="removeLogo()">Entfernen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="wizard-nav">
+      <div></div>
+      <button class="btn-next" onclick="goTo(2)">Weiter → Tage wählen</button>
+    </div>
+  </div>
+
+  <!-- ══ SCHRITT 2: Tage ══ -->
+  <div class="wizard-step" id="step2">
+    <div class="card">
+      <div class="card-title">Welche Tage?</div>
+      <div class="card-sub">Wähle die Tage aus und wie viele Gerichte du pro Tag anbietest</div>
+
+      <div class="days-grid">
+        <div class="day-card" id="day-montag" onclick="toggleDay('montag',this)">
+          <div class="day-name">Mo</div>
+          <div class="day-dot"></div>
+        </div>
+        <div class="day-card selected" id="day-dienstag" onclick="toggleDay('dienstag',this)">
+          <div class="day-name">Di</div>
+          <div class="day-dot"></div>
+        </div>
+        <div class="day-card selected" id="day-mittwoch" onclick="toggleDay('mittwoch',this)">
+          <div class="day-name">Mi</div>
+          <div class="day-dot"></div>
+        </div>
+        <div class="day-card selected" id="day-donnerstag" onclick="toggleDay('donnerstag',this)">
+          <div class="day-name">Do</div>
+          <div class="day-dot"></div>
+        </div>
+        <div class="day-card selected" id="day-freitag" onclick="toggleDay('freitag',this)">
+          <div class="day-name">Fr</div>
+          <div class="day-dot"></div>
+        </div>
+      </div>
+
+      <div class="days-detail" id="days-detail">
+        <!-- Dynamisch befüllt -->
+      </div>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goTo(1)">← Zurück</button>
+      <button class="btn-next" onclick="goTo(3)">Weiter → Gerichte</button>
+    </div>
+  </div>
+
+  <!-- ══ SCHRITT 3: Gerichte ══ -->
+  <div class="wizard-step" id="step3">
+    <div class="card">
+      <div class="card-title">Gerichte eintragen</div>
+      <div class="card-sub">Trag deine Gerichte und Preise ein — optional mit KI-Bild</div>
+
+      <div class="woche-bar">
+        <label for="woche-input">Kalenderwoche</label>
+        <input type="text" id="woche-input" placeholder="z.B. 07.04. – 11.04.2025" style="max-width:220px;">
+      </div>
+
+      <div class="meals-day-tabs" id="meals-tabs"></div>
+      <div id="meals-panels"></div>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goTo(2)">← Zurück</button>
+      <button class="btn-next" onclick="goTo(4)">Weiter → Vorschau & Export</button>
+    </div>
+  </div>
+
+  <!-- ══ SCHRITT 4: Export ══ -->
+  <div class="wizard-step" id="step4">
+    <div class="card">
+      <div class="card-title">Vorschau & Export</div>
+      <div class="card-sub">Alles gut? Dann lade deine Bilder herunter.</div>
+
+      <div class="preview-grid">
+        <div class="preview-panel">
+          <div class="preview-label">Story / Hochformat</div>
+          <div class="preview-canvas-wrap" id="prev-story">
+            <span>Vorschau wird geladen…</span>
+          </div>
+        </div>
+        <div class="preview-panel">
+          <div class="preview-label">Feed / Quadrat</div>
+          <div class="preview-canvas-wrap square" id="prev-feed">
+            <span>Vorschau wird geladen…</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="download-row">
+        <button class="btn-download primary" onclick="downloadAll()">⬇ Alle herunterladen</button>
+        <button class="btn-download" onclick="downloadStory()">Story PNG</button>
+        <button class="btn-download" onclick="downloadFeed()">Feed PNG</button>
+      </div>
+
+      <div class="caption-box">
+        <div class="caption-header">
+          <span class="caption-title">📋 Instagram Caption</span>
+          <button class="btn-copy" onclick="copyCaption()">Kopieren</button>
+        </div>
+        <textarea class="caption-text" id="caption-output" readonly></textarea>
+      </div>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goTo(3)">← Zurück</button>
+      <button class="btn-next" onclick="newWeek()" style="background:var(--success);">+ Neue Woche</button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══ State ══ */
+const state = {
+  template: 'instagram_story',
+  logo: null,
+  days: { montag: false, dienstag: true, mittwoch: true, donnerstag: true, freitag: true },
+  mealsPerDay: { montag: 1, dienstag: 1, mittwoch: 1, donnerstag: 1, freitag: 1 },
+  meals: {},   // { dienstag: [{name:'', preis:'', img:null}, ...] }
+  woche: '',
+  currentStep: 1
+}
+
+const dayNames = {
+  montag:'Montag', dienstag:'Dienstag', mittwoch:'Mittwoch',
+  donnerstag:'Donnerstag', freitag:'Freitag'
+}
+
+/* ══ Navigation ══ */
+function goTo(step) {
+  document.getElementById(`step${state.currentStep}`).classList.remove('active')
+
+  // Mark done
+  for (let i = 1; i <= 4; i++) {
+    const b = document.getElementById(`s${i}`)
+    b.classList.remove('active','done')
+    if (i < step)       b.classList.add('done')
+    else if (i === step) b.classList.add('active')
+  }
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById(`l${i}`).classList.toggle('done', i < step)
+  }
+
+  // Prep step content
+  if (step === 2) buildDaysDetail()
+  if (step === 3) buildMealsPanels()
+  if (step === 4) buildPreview()
+
+  state.currentStep = step
+  document.getElementById(`step${step}`).classList.add('active')
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+/* ══ Step 1: Template ══ */
+function selectTemplate(id, el) {
+  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'))
+  el.classList.add('selected')
+  state.template = id
+}
+
+function handleLogoUpload(file) {
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = e => {
+    state.logo = e.target.result
+    document.getElementById('logo-preview-img').src = e.target.result
+    document.getElementById('logo-preview-name').textContent = file.name
+    document.getElementById('logo-preview').classList.add('visible')
+    document.getElementById('logo-zone').style.display = 'none'
+  }
+  reader.readAsDataURL(file)
+}
+function removeLogo() {
+  state.logo = null
+  document.getElementById('logo-preview').classList.remove('visible')
+  document.getElementById('logo-zone').style.display = 'block'
+  document.getElementById('logo-input').value = ''
+}
+function dragOver(e, id) { e.preventDefault(); document.getElementById(id).classList.add('dragover') }
+function dragLeave(id)   { document.getElementById(id).classList.remove('dragover') }
+function dropFile(e, type) {
+  e.preventDefault(); dragLeave('logo-zone')
+  const file = e.dataTransfer.files[0]
+  if (file && type === 'logo') handleLogoUpload(file)
+}
+
+/* ══ Step 2: Days ══ */
+function toggleDay(day, el) {
+  state.days[day] = !state.days[day]
+  el.classList.toggle('selected', state.days[day])
+  buildDaysDetail()
+}
+
+function buildDaysDetail() {
+  const wrap = document.getElementById('days-detail')
+  const active = Object.keys(state.days).filter(d => state.days[d])
+
+  if (active.length === 0) { wrap.classList.remove('visible'); return }
+  wrap.classList.add('visible')
+
+  wrap.innerHTML = `<div style="font-size:13px; font-weight:600; color:var(--muted); margin-bottom:12px; text-transform:uppercase; letter-spacing:.5px;">Gerichte pro Tag</div>`
+
+  active.forEach(day => {
+    const n = state.mealsPerDay[day] || 1
+    wrap.innerHTML += `
+      <div class="day-detail-row">
+        <div class="day-detail-name">${dayNames[day]}</div>
+        <div class="count-control">
+          <button class="count-btn" onclick="changeCount('${day}',-1)">−</button>
+          <span class="count-val" id="cnt-${day}">${n}</span>
+          <button class="count-btn" onclick="changeCount('${day}',1)">+</button>
+        </div>
+      </div>`
+  })
+}
+
+function changeCount(day, delta) {
+  const cur = state.mealsPerDay[day] || 1
+  state.mealsPerDay[day] = Math.max(1, Math.min(5, cur + delta))
+  document.getElementById(`cnt-${day}`).textContent = state.mealsPerDay[day]
+}
+
+/* ══ Step 3: Meals ══ */
+let activeMealDay = null
+
+function buildMealsPanels() {
+  const active = Object.keys(state.days).filter(d => state.days[d])
+  if (!active.length) return
+
+  const tabs  = document.getElementById('meals-tabs')
+  const panels= document.getElementById('meals-panels')
+
+  tabs.innerHTML = ''
+  panels.innerHTML = ''
+
+  if (!activeMealDay || !active.includes(activeMealDay)) activeMealDay = active[0]
+
+  active.forEach(day => {
+    // Init meals array
+    if (!state.meals[day]) state.meals[day] = []
+    const count = state.mealsPerDay[day] || 1
+    while (state.meals[day].length < count) state.meals[day].push({ name:'', preis:'', img: null })
+    while (state.meals[day].length > count) state.meals[day].pop()
+
+    // Tab
+    const tab = document.createElement('div')
+    tab.className = 'meals-day-tab' + (day === activeMealDay ? ' active' : '')
+    tab.textContent = dayNames[day]
+    tab.onclick = () => switchMealDay(day)
+    tabs.appendChild(tab)
+
+    // Panel
+    const panel = document.createElement('div')
+    panel.className = 'meal-block' + (day === activeMealDay ? ' active' : '')
+    panel.id = `meal-panel-${day}`
+
+    let html = ''
+    for (let i = 0; i < count; i++) {
+      const m = state.meals[day][i]
+      html += `
+        <div class="meal-item">
+          <div class="meal-item-header">Gericht ${count > 1 ? i+1 : ''}</div>
+          <div class="meal-fields">
+            <div class="field-wrap">
+              <label>Gerichtname</label>
+              <input type="text" placeholder="z.B. Schäufele mit Knödel"
+                value="${m.name || ''}"
+                oninput="saveMealField('${day}',${i},'name',this.value)">
+            </div>
+            <div class="field-wrap">
+              <label>Preis</label>
+              <input type="text" placeholder="8,50 €"
+                value="${m.preis || ''}"
+                oninput="saveMealField('${day}',${i},'preis',this.value)">
+            </div>
+          </div>
+          <div class="meal-img-row">
+            <div class="meal-img-thumb" id="thumb-${day}-${i}">
+              ${m.img ? `<img src="${m.img}">` : '🍽️'}
+            </div>
+            <button class="btn-gen-img" onclick="generateImage('${day}',${i})">
+              ✨ KI-Bild generieren
+            </button>
+            <span class="img-badge">Plus</span>
+          </div>
+        </div>`
+    }
+    panel.innerHTML = html
+    panels.appendChild(panel)
+  })
+}
+
+function switchMealDay(day) {
+  activeMealDay = day
+  document.querySelectorAll('.meals-day-tab').forEach((t,i) => {
+    const days = Object.keys(state.days).filter(d => state.days[d])
+    t.classList.toggle('active', days[i] === day)
+  })
+  document.querySelectorAll('.meal-block').forEach(p => p.classList.remove('active'))
+  document.getElementById(`meal-panel-${day}`).classList.add('active')
+}
+
+function saveMealField(day, idx, field, val) {
+  if (!state.meals[day]) return
+  if (!state.meals[day][idx]) state.meals[day][idx] = {}
+  state.meals[day][idx][field] = val
+}
+
+function generateImage(day, idx) {
+  showToast('KI-Bildgenerierung ist im Plus-Paket verfügbar 🚀')
+}
+
+/* ══ Step 4: Preview & Export ══ */
+function buildPreview() {
+  // Build caption
+  const active = Object.keys(state.days).filter(d => state.days[d])
+  const woche  = document.getElementById('woche-input')?.value || ''
+
+  let caption = `🍽️ Unser Mittagstisch diese Woche\n\n`
+  if (woche) caption += `📅 ${woche}\n\n`
+
+  active.forEach(day => {
+    caption += `${dayNames[day]}:\n`
+    ;(state.meals[day] || []).forEach(m => {
+      if (m.name) caption += `• ${m.name}${m.preis ? ' — ' + m.preis : ''}\n`
+    })
+    caption += '\n'
+  })
+  caption += `Wir freuen uns auf euren Besuch! 🥩\n\n#mittagstisch #metzgerei #regional #frischgekocht`
+
+  document.getElementById('caption-output').value = caption
+
+  // Simple canvas placeholder previews
+  ;['story', 'feed'].forEach(type => {
+    const wrap = document.getElementById(`prev-${type}`)
+    wrap.innerHTML = `
+      <canvas id="canvas-${type}" style="width:100%;height:100%;border-radius:6px;"></canvas>`
+    const canvas = document.getElementById(`canvas-${type}`)
+    canvas.width  = type === 'story' ? 1080 : 1080
+    canvas.height = type === 'story' ? 1920 : 1080
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#1a1714'
+    ctx.fillRect(0,0,canvas.width,canvas.height)
+    ctx.fillStyle = '#d4853a'
+    ctx.font = 'bold 80px Syne, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('MetzgerPost', canvas.width/2, canvas.height/2 - 60)
+    ctx.fillStyle = '#8a8070'
+    ctx.font = '48px DM Sans, sans-serif'
+    ctx.fillText(woche || 'Mittagstisch', canvas.width/2, canvas.height/2 + 20)
+
+    // Meals
+    ctx.fillStyle = '#f0ece4'
+    ctx.font = '38px DM Sans, sans-serif'
+    let y = canvas.height/2 + 120
+    active.slice(0,4).forEach(day => {
+      const m = (state.meals[day] || [])[0]
+      if (m?.name) {
+        ctx.fillText(`${dayNames[day].substring(0,2)}: ${m.name.substring(0,25)}`, canvas.width/2, y)
+        y += 70
+      }
+    })
+  })
+}
+
+function copyCaption() {
+  const el = document.getElementById('caption-output')
+  el.select()
+  navigator.clipboard.writeText(el.value).then(() => showToast('Caption kopiert! ✓'))
+}
+
+function downloadAll()  { downloadCanvas('story'); setTimeout(() => downloadCanvas('feed'), 400) }
+function downloadStory(){ downloadCanvas('story') }
+function downloadFeed() { downloadCanvas('feed') }
+function downloadCanvas(type) {
+  const canvas = document.getElementById(`canvas-${type}`)
+  if (!canvas) { showToast('Bitte zuerst Vorschau laden'); return }
+  const a = document.createElement('a')
+  a.href = canvas.toDataURL('image/png')
+  a.download = `mittagstisch-${type}-${Date.now()}.png`
+  a.click()
+  showToast(`${type === 'story' ? 'Story' : 'Feed'} heruntergeladen ✓`)
+}
+
+function newWeek() {
+  if (!confirm('Neue Woche starten? Die Gerichte werden zurückgesetzt.')) return
+  state.meals = {}
+  state.woche = ''
+  document.getElementById('woche-input').value = ''
+  goTo(3)
+}
+
+/* ══ Toast ══ */
+function showToast(msg) {
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.classList.add('show')
+  setTimeout(() => t.classList.remove('show'), 2800)
+}
+
+/* ══ Init: Design aus Dashboard laden wenn vorhanden ══ */
+window.addEventListener('DOMContentLoaded', () => {
+  const params    = new URLSearchParams(window.location.search)
+  const startStep = parseInt(params.get('step')) || 1
+  const designId  = params.get('design')
+  const weekId    = params.get('week')
+
+  if (designId) {
+    try {
+      const saved = JSON.parse(localStorage.getItem('mp_active_design'))
+      if (saved && saved.id === designId) {
+        state.template    = saved.template    || state.template
+        state.logo        = saved.logo        || null
+        state.days        = saved.days        || state.days
+        state.mealsPerDay = saved.mealsPerDay || state.mealsPerDay
+      }
+    } catch(e) {}
+  }
+
+  if (weekId) {
+    try {
+      const savedWeek = JSON.parse(localStorage.getItem('mp_active_week'))
+      if (savedWeek && savedWeek.id === weekId) {
+        state.meals = savedWeek.meals || {}
+        setTimeout(() => {
+          const el = document.getElementById('woche-input')
+          if (el) el.value = savedWeek.woche || ''
+        }, 100)
+        if (savedWeek.designId) {
+          try {
+            const designs = JSON.parse(localStorage.getItem('mp_designs')) || []
+            const d = designs.find(x => x.id === savedWeek.designId)
+            if (d) {
+              state.template    = d.template    || state.template
+              state.logo        = d.logo        || null
+              state.days        = d.days        || state.days
+              state.mealsPerDay = d.mealsPerDay || state.mealsPerDay
+            }
+          } catch(e) {}
+        }
+      }
+    } catch(e) {}
+  }
+
+  buildDaysDetail()
+  if (startStep > 1) goTo(startStep)
+})
+</script>
+
+</body>
+</html>

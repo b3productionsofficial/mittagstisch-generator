@@ -1,38 +1,24 @@
-const standardGerichte = {
-  schlachtschuessel: { bild: "Gerichte/schlachtschuessel.jpg", preis: "ab 5,00 €", text: "Schlachtschüssel" },
-  kotelett: { bild: "Gerichte/kotelett.jpg", preis: "6,80 €", text: "Kotelett mit Kartoffelsalat" },
-  fleischteller: { bild: "Gerichte/fleischteller.jpg", preis: "€ pro 100g", text: "Schnitzel, Bratwürste, Frikadelle und Fleischkäse mit Kartoffelsalat" },
-  schaeufele: { bild: "Gerichte/schaeufele.jpg", preis: "8,50 €", text: "Schäufele mit Knödel" },
-  cordonbleu: { bild: "Gerichte/cordonbleu.jpg", preis: "6,80 €", text: "Cordon Bleu mit Kartoffelsalat" },
-  gyros: { bild: "Gerichte/gyros.jpg", preis: "6,80 €", text: "Gyros mit Krautsalat und Zaziki" },
-  schweinebraten: { bild: "Gerichte/schweinebraten.jpg", preis: "8,50 €", text: "Schweinebraten mit Knödel" },
-  schaschlik: { bild: "Gerichte/schaschlik.jpg", preis: "8,50 €", text: "Schaschlik mit Semmel" },
-  gulasch: { bild: "Gerichte/gulasch.jpg", preis: "6,80 €", text: "Gulasch mit Spätzle" },
-  rouladen: { bild: "Gerichte/rouladen.jpg", preis: "8,50 €", text: "Rouladen mit Spätzle" },
-  backfisch: { bild: "Gerichte/backfisch.jpg", preis: "6,80 €", text: "Backfisch mit Kartoffelsalat" },
-  spaghetti: { bild: "Gerichte/spaghetti.jpg", preis: "6,80 €", text: "Spaghetti Bolognese" },
-  backschinken: { bild: "Gerichte/backschinken.jpg", preis: "8,50 €", text: "Backschinken mit Kartoffelsalat" },
-  zwiebelrostbraten: { bild: "Gerichte/zwiebelrostbraten.jpg", preis: "10,50 €", text: "Zwiebelrostbraten mit Spätzle" },
-  lende: { bild: "Gerichte/lende.jpg", preis: "8,50 €", text: "Lende mit Rahmsauce und Spätzle" },
-  kuemmelbraten: { bild: "Gerichte/kuemmelbraten.jpg", preis: "8,50 €", text: "Kümmelbraten mit Semmelknödel" },
-  currywurst: { bild: "Gerichte/currywurst.jpg", preis: "6,80 €", text: "Currywurst mit Semmel" },
-  hackbraten: { bild: "Gerichte/hackbraten.jpg", preis: "8,50 €", text: "Hackbraten mit Kartoffeln und Gemüse" },
-  karpfenfilet: { bild: "Gerichte/karpfenfilet.jpg", preis: "8,50 €", text: "Karpfenfilet mit Kartoffelsalat" },
-  krautwickel: { bild: "Gerichte/krautwickel.jpg", preis: "8,50 €", text: "Krautwickel mit Kartoffeln" },
-  lasagne: { bild: "Gerichte/lasagne.jpg", preis: "6,80 €", text: "Lasagne" },
-  rindfleisch_meerrettich: { bild: "Gerichte/rindfleisch_meerrettich.jpg", preis: "8,50 €", text: "Rindfleisch mit Kartoffelsalat und Meerrettich" }
-}
-
-
-
-
-
 
 
 function getAktuellerKunde() {
+  const params = new URLSearchParams(window.location.search)
+  const kundeAusUrl = params.get("kunde")
+
+  // 1. Wenn URL vorhanden → verwenden
+  if (kundeAusUrl && kunden[kundeAusUrl]) {
+    localStorage.setItem("aktuellerKunde", kundeAusUrl)
+    return kundeAusUrl
+  }
+
+  // 2. Wenn Dropdown existiert → nutzen
   const select = document.getElementById("kunde")
-  if (!select) return localStorage.getItem("aktuellerKunde") || "sorgundseitz"
-  return select.value || "sorgundseitz"
+  if (select && select.value) {
+    localStorage.setItem("aktuellerKunde", select.value)
+    return select.value
+  }
+
+  // 3. Fallback
+  return localStorage.getItem("aktuellerKunde") || "sorgundseitz"
 }
 
 function setAktuellerKunde(kunde) {
@@ -119,6 +105,17 @@ function updateVorlageBereiche() {
   const gerichtePanel = document.getElementById("gerichte-panel")
   const bereich2Title = document.getElementById("bereich2-title")
   const captionPanel = document.getElementById("caption-panel")
+  const goetzTextPanel = document.getElementById("goetz-text-panel")
+  const vorlageKey = document.getElementById("vorlage")?.value
+  const istGoetzTextVorlage = vorlageKey === "tagesgerichte_feed_text"
+
+  if (gerichtePanel) {
+  gerichtePanel.style.display = istDruck || istGoetzTextVorlage ? "none" : "block"
+}
+
+if (goetzTextPanel) {
+  goetzTextPanel.style.display = istGoetzTextVorlage ? "block" : "none"
+}
 
   if (bereich2Title) {
     bereich2Title.textContent = istDruck ? "2. Druck-Inhalte" : "2. Kalenderwoche"
@@ -136,9 +133,6 @@ function updateVorlageBereiche() {
     druckWoche2Block.style.display = istDruck ? "block" : "none"
   }
 
-  if (gerichtePanel) {
-    gerichtePanel.style.display = istDruck ? "none" : "block"
-  }
 
   if (instagramWocheBlock) {
     instagramWocheBlock.style.display = istDruck ? "none" : "block"
@@ -163,6 +157,48 @@ function openPreviewModal(sourceCanvasId) {
   ctx.drawImage(sourceCanvas, 0, 0)
 
   modal.style.display = "block"
+}
+
+function updateVorlageSichtbarkeit() {
+  const vorlageBlock = document.getElementById("vorlage-block")
+  if (!vorlageBlock) return
+
+  const vorlagen = getVorlagenFuerKunde()
+  const anzahl = Object.keys(vorlagen).length
+
+  vorlageBlock.style.display = anzahl > 1 ? "block" : "none"
+}
+
+function hatFixenKundenAusUrl() {
+  const params = new URLSearchParams(window.location.search)
+  const kundeAusUrl = params.get("kunde")
+  return !!(kundeAusUrl && kunden[kundeAusUrl])
+}
+
+function updateKundeSichtbarkeit() {
+  const kundeBlock = document.getElementById("kunde-block")
+  if (!kundeBlock) return
+
+  kundeBlock.style.display = hatFixenKundenAusUrl() ? "none" : "block"
+}
+
+function renderKundenDropdown() {
+  const select = document.getElementById("kunde")
+  if (!select) return
+
+  const aktuellerKunde = getAktuellerKunde()
+  select.innerHTML = ""
+
+  Object.entries(kunden).forEach(([key, config]) => {
+    const option = document.createElement("option")
+    option.value = key
+    option.textContent = config.name
+    select.appendChild(option)
+  })
+
+  if (kunden[aktuellerKunde]) {
+    select.value = aktuellerKunde
+  }
 }
 
 
@@ -198,11 +234,27 @@ function handleMealChange(dayId) {
 }
 
 function getGerichte() {
-  return safeParseStorage(getStorageKey("gerichte"), structuredClone(standardGerichte))
+  const kunde = getAktuellerKunde()
+
+  const fallbackGerichte =
+    kundenGerichte[kunde] && Object.keys(kundenGerichte[kunde]).length > 0
+      ? structuredClone(kundenGerichte[kunde])
+      : structuredClone(standardGerichte)
+
+  return safeParseStorage(getStorageKey("gerichte"), fallbackGerichte)
 }
 
 function getGespeicherteWochen() {
   return safeParseStorage(getStorageKey("wochenplaene"), {})
+}
+
+function updateSeitenTitel() {
+  const titel = document.getElementById("seiten-titel")
+  const kunde = getAktuellerKunde()
+
+  if (!titel || !kunden[kunde]) return
+
+  titel.textContent = `${kunden[kunde].name} – Mittagstisch Generator`
 }
 
 function getLayoutOverrides() {
@@ -222,25 +274,44 @@ function getVorlagenFuerKunde() {
   return generatorVorlagen[kunde] || {}
 }
 
+function getAktiveVorlageConfig() {
+  const vorlageKey = document.getElementById("vorlage")?.value
+  const vorlagen = getVorlagenFuerKunde()
+  return vorlagen[vorlageKey] || null
+}
+
 function renderVorlagenDropdown() {
   const select = document.getElementById("vorlage")
   if (!select) return
 
+  const kunde = getAktuellerKunde()
   const vorlagen = getVorlagenFuerKunde()
+  const keys = Object.keys(vorlagen)
+
+  console.log("renderVorlagenDropdown", {
+    kunde,
+    vorlagen,
+    keys
+  })
 
   select.innerHTML = ""
 
-  Object.entries(vorlagen).forEach(([key, config]) => {
+  if (keys.length === 0) {
+    const option = document.createElement("option")
+    option.value = ""
+    option.textContent = "Keine Vorlagen verfügbar"
+    select.appendChild(option)
+    return
+  }
+
+  keys.forEach((key) => {
     const option = document.createElement("option")
     option.value = key
-    option.textContent = config.name
+    option.textContent = vorlagen[key].name
     select.appendChild(option)
   })
 
-  const ersterKey = Object.keys(vorlagen)[0]
-  if (ersterKey) {
-    select.value = ersterKey
-  }
+  select.value = keys[0]
 }
 
 function updatePreviewBereiche() {
@@ -259,11 +330,6 @@ function updatePreviewBereiche() {
   druckWrap.style.display = istDruck ? "flex" : "none"
 }
 
-function getAktiveVorlageConfig() {
-  const vorlageKey = document.getElementById("vorlage")?.value
-  const vorlagen = getVorlagenFuerKunde()
-  return vorlagen[vorlageKey] || null
-}
 
 function updateDownloadButtons() {
   const config = getAktiveVorlageConfig()
@@ -365,26 +431,6 @@ async function downloadPrint() {
   }
 }
 
-function renderLayoutDropdown() {
-  const select = document.getElementById("vorlage")
-  if (!select) return
-
-  const kunde = getAktuellerKunde()
-  const layoutsFuerKunde = kundenLayouts[kunde] || {}
-
-  select.innerHTML = ""
-
-  Object.keys(layoutsFuerKunde).forEach((layout) => {
-    if (layout !== "mittagstisch") return
-
-    const option = document.createElement("option")
-    option.value = layout
-    option.textContent = layout
-    select.appendChild(option)
-  })
-
-  select.value = "mittagstisch"
-}
 
 function fuelleDropdown(id, standardWert = "", gefilterteListe = null) {
   const select = document.getElementById(id)
@@ -486,6 +532,45 @@ function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
   })
 }
 
+function drawTextLine(ctx, text, x, y, align = "left") {
+  ctx.textAlign = align
+  ctx.fillText(text || "", x, y)
+}
+
+function drawGoetzTag(ctx, tagKey, layout) {
+  const tag = layout.tage[tagKey]
+  if (!tag) return
+
+  const title = document.getElementById(`${tagKey}-title`)?.value || ""
+  const meal1 = document.getElementById(`${tagKey}-meal1`)?.value || ""
+  const price1 = document.getElementById(`${tagKey}-price1`)?.value || ""
+  const meal2 = document.getElementById(`${tagKey}-meal2`)?.value || ""
+  const price2 = document.getElementById(`${tagKey}-price2`)?.value || ""
+  const meal3 = document.getElementById(`${tagKey}-meal3`)?.value || ""
+  const price3 = document.getElementById(`${tagKey}-price3`)?.value || ""
+
+  // Titel
+  ctx.fillStyle = "#76b82a"
+  ctx.font = `700 ${tag.titleFontSize}px Georgia, serif`
+  ctx.textAlign = "left"
+  ctx.fillText(title, tag.titleX, tag.titleY)
+
+  // Gerichte
+  ctx.fillStyle = "#ffffff"
+  ctx.font = `500 26px Georgia, serif`
+  ctx.fillText(meal1, tag.meal1X, tag.meal1Y)
+  ctx.fillText(meal2, tag.meal2X, tag.meal2Y)
+  ctx.fillText(meal3, tag.meal3X, tag.meal3Y)
+
+  // Preise
+  ctx.textAlign = "right"
+  ctx.fillText(price1, tag.price1X, tag.price1Y)
+  ctx.fillText(price2, tag.price2X, tag.price2Y)
+  ctx.fillText(price3, tag.price3X, tag.price3Y)
+}
+
+
+
 function drawImageCover(ctx, img, cx, cy, radius) {
   const diameter = radius * 2
   const imgRatio = img.width / img.height
@@ -508,7 +593,7 @@ function drawImageCover(ctx, img, cx, cy, radius) {
 }
 
 async function drawMeal(ctx, id, config) {
-  const value = document.getElementById(id).value
+  const value = document.getElementById(id)?.value
   const meal = gerichte[value]
 
   if (!meal) {
@@ -549,43 +634,7 @@ async function drawMeal(ctx, id, config) {
   ctx.fillText(meal.preis, config.priceX, config.priceY)
 }
 
-async function drawMealFromId(ctx, selectId, config) {
 
-  const value = document.getElementById(selectId)?.value
-  const meal = gerichte[value]
-
-  if (!meal) return
-
-  const img = await loadImage(meal.bild)
-
-  ctx.save()
-  ctx.beginPath()
-  ctx.arc(config.imageX, config.imageY, config.imageRadius, 0, Math.PI * 2)
-  ctx.closePath()
-  ctx.clip()
-
-  drawImageCover(ctx, img, config.imageX, config.imageY, config.imageRadius)
-
-  ctx.restore()
-
-  ctx.textAlign = "center"
-  ctx.fillStyle = "#2f2f2f"
-  ctx.font = `500 ${config.textFontSize}px 'Raleway'`
-
-  drawWrappedText(
-    ctx,
-    meal.text,
-    config.textX,
-    config.textY,
-    config.textMaxWidth,
-    config.textLineHeight
-  )
-
-  ctx.fillStyle = config.priceColor || "#2f2f2f"
-  ctx.font = `600 ${config.priceFontSize}px 'Raleway'`
-
-  ctx.fillText(meal.preis, config.priceX, config.priceY)
-}
 
 function getFinalLayout(layoutName, formatName) {
   const overrides = getLayoutOverrides()
@@ -655,6 +704,20 @@ function getFinalLayout(layoutName, formatName) {
     })
   }
 
+    // Götz Text-Feed: tage
+  if (standard.tage) {
+    const gespeicherteTage = formatOverrides.tage || {}
+
+    Object.keys(gespeicherteTage).forEach((tag) => {
+      if (standard.tage[tag]) {
+        standard.tage[tag] = {
+          ...standard.tage[tag],
+          ...gespeicherteTage[tag]
+        }
+      }
+    })
+  }
+
   return standard
 }
 
@@ -684,6 +747,16 @@ async function renderToCanvas(canvas, formatName) {
 
   const template = await loadImage(layout.template)
   ctx.drawImage(template, 0, 0, canvas.width, canvas.height)
+
+  // GÖTZ TEXT FEED
+if (layoutName === "tagesgerichte_feed_text" && formatName === "feed") {
+  const tage = ["montag", "dienstag", "mittwoch", "donnerstag", "freitag"]
+
+tage.forEach(tag => {
+  drawGoetzTag(ctx, tag, layout)
+})
+  return canvas.toDataURL("image/png")
+}
 
   // DRUCK VORDERSEITE
   if (formatName === "front") {
@@ -963,6 +1036,39 @@ function saveWoche() {
   document.getElementById("status").textContent = "Woche gespeichert."
 }
 
+function fuelleGoetzDropdown(selectId) {
+  const select = document.getElementById(selectId)
+  if (!select) return
+
+  select.innerHTML = '<option value="">-- Gericht wählen --</option>'
+
+  Object.entries(gerichte).forEach(([key, gericht]) => {
+    const option = document.createElement("option")
+    option.value = key
+    option.textContent = gericht.text
+    select.appendChild(option)
+  })
+}
+
+function handleGoetzMealChange(tag, index) {
+  const select = document.getElementById(`${tag}-meal${index}-select`)
+  const textInput = document.getElementById(`${tag}-meal${index}`)
+  const priceInput = document.getElementById(`${tag}-price${index}`)
+
+  if (!select) return
+
+  const key = select.value
+  if (!key || !gerichte[key]) return
+
+  const gericht = gerichte[key]
+
+  // Text + Preis automatisch setzen
+  if (textInput) textInput.value = gericht.text || ""
+  if (priceInput) priceInput.value = gericht.preis || ""
+
+  updatePreviews()
+}
+
 function renderWochenDropdown() {
   const select = document.getElementById("gespeicherte-wochen")
   if (!select) return
@@ -1038,39 +1144,72 @@ function deleteWoche() {
 }
 
 function handleKundeChange() {
-  const kunde = getAktuellerKunde()
-  setAktuellerKunde(kunde)
-
-  gerichte = getGerichte()
-  renderVorlagenDropdown()
-  initialisiereDropdowns()
-  renderWochenDropdown()
-  updateDownloadButtons()
-  updatePreviews()
-}
-
-window.addEventListener("DOMContentLoaded", () => {
   const kundeSelect = document.getElementById("kunde")
-  const gespeicherterKunde = localStorage.getItem("aktuellerKunde") || "sorgundseitz"
+  if (!kundeSelect) return
 
-  if (kundeSelect) {
-    kundeSelect.value = gespeicherterKunde
-  }
+  const kunde = kundeSelect.value
+  localStorage.setItem("aktuellerKunde", kunde)
 
   gerichte = getGerichte()
+
   renderVorlagenDropdown()
+  updateVorlageSichtbarkeit()
   initialisiereDropdowns()
 
   updatePreisFeld("dienstag")
   updatePreisFeld("mittwoch")
   updatePreisFeld("donnerstag")
   updatePreisFeld("freitag")
-
   updatePreisFeld("druck-dienstag")
   updatePreisFeld("druck-mittwoch")
   updatePreisFeld("druck-donnerstag")
   updatePreisFeld("druck-freitag")
+  updatePreisFeld("dienstag2")
+  updatePreisFeld("mittwoch2")
+  updatePreisFeld("donnerstag2")
+  updatePreisFeld("freitag2")
 
+  
+  updateDownloadButtons()
+  updateVorlageBereiche()
+  updatePreviewBereiche()
+  updatePreviews()
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  renderKundenDropdown()
+
+  const kunde = getAktuellerKunde()
+  const kundeSelect = document.getElementById("kunde")
+
+  if (kundeSelect) {
+    kundeSelect.value = kunde
+  }
+
+  updateKundeSichtbarkeit()
+  updateSeitenTitel()
+
+  gerichte = getGerichte()
+
+  // Götz-Text-Dropdowns befüllen
+  ;["montag", "dienstag", "mittwoch", "donnerstag", "freitag"].forEach(tag => {
+    ;[1, 2, 3].forEach(i => {
+      fuelleGoetzDropdown(`${tag}-meal${i}-select`)
+    })
+  })
+
+  renderVorlagenDropdown()
+  updateVorlageSichtbarkeit()
+  initialisiereDropdowns()
+
+  updatePreisFeld("dienstag")
+  updatePreisFeld("mittwoch")
+  updatePreisFeld("donnerstag")
+  updatePreisFeld("freitag")
+  updatePreisFeld("druck-dienstag")
+  updatePreisFeld("druck-mittwoch")
+  updatePreisFeld("druck-donnerstag")
+  updatePreisFeld("druck-freitag")
   updatePreisFeld("dienstag2")
   updatePreisFeld("mittwoch2")
   updatePreisFeld("donnerstag2")

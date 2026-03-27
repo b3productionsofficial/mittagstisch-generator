@@ -1,27 +1,4 @@
-const standardGerichte = {
-  schlachtschuessel: { bild: "Gerichte/schlachtschuessel.jpg", preis: "ab 5,00 €", text: "Schlachtschüssel" },
-  kotelett: { bild: "Gerichte/kotelett.jpg", preis: "6,80 €", text: "Kotelett mit Kartoffelsalat" },
-  fleischteller: { bild: "Gerichte/fleischteller.jpg", preis: "€ pro 100g", text: "Schnitzel, Bratwürste, Frikadelle und Fleischkäse mit Kartoffelsalat" },
-  schaeufele: { bild: "Gerichte/schaeufele.jpg", preis: "8,50 €", text: "Schäufele mit Knödel" },
-  cordonbleu: { bild: "Gerichte/cordonbleu.jpg", preis: "6,80 €", text: "Cordon Bleu mit Kartoffelsalat" },
-  gyros: { bild: "Gerichte/gyros.jpg", preis: "6,80 €", text: "Gyros mit Krautsalat und Zaziki" },
-  schweinebraten: { bild: "Gerichte/schweinebraten.jpg", preis: "8,50 €", text: "Schweinebraten mit Knödel" },
-  schaschlik: { bild: "Gerichte/schaschlik.jpg", preis: "8,50 €", text: "Schaschlik mit Semmel" },
-  gulasch: { bild: "Gerichte/gulasch.jpg", preis: "6,80 €", text: "Gulasch mit Spätzle" },
-  rouladen: { bild: "Gerichte/rouladen.jpg", preis: "8,50 €", text: "Rouladen mit Spätzle" },
-  backfisch: { bild: "Gerichte/backfisch.jpg", preis: "6,80 €", text: "Backfisch mit Kartoffelsalat" },
-  spaghetti: { bild: "Gerichte/spaghetti.jpg", preis: "6,80 €", text: "Spaghetti Bolognese" },
-  backschinken: { bild: "Gerichte/backschinken.jpg", preis: "8,50 €", text: "Backschinken mit Kartoffelsalat" },
-  zwiebelrostbraten: { bild: "Gerichte/zwiebelrostbraten.jpg", preis: "10,50 €", text: "Zwiebelrostbraten mit Spätzle" },
-  lende: { bild: "Gerichte/lende.jpg", preis: "8,50 €", text: "Lende mit Rahmsauce und Spätzle" },
-  kuemmelbraten: { bild: "Gerichte/kuemmelbraten.jpg", preis: "8,50 €", text: "Kümmelbraten mit Semmelknödel" },
-  currywurst: { bild: "Gerichte/currywurst.jpg", preis: "6,80 €", text: "Currywurst mit Semmel" },
-  hackbraten: { bild: "Gerichte/hackbraten.jpg", preis: "8,50 €", text: "Hackbraten mit Kartoffeln und Gemüse" },
-  karpfenfilet: { bild: "Gerichte/karpfenfilet.jpg", preis: "8,50 €", text: "Karpfenfilet mit Kartoffelsalat" },
-  krautwickel: { bild: "Gerichte/krautwickel.jpg", preis: "8,50 €", text: "Krautwickel mit Kartoffeln" },
-  lasagne: { bild: "Gerichte/lasagne.jpg", preis: "6,80 €", text: "Lasagne" },
-  rindfleisch_meerrettich: { bild: "Gerichte/rindfleisch_meerrettich.jpg", preis: "8,50 €", text: "Rindfleisch mit Kartoffelsalat und Meerrettich" }
-}
+
 
 
 
@@ -90,9 +67,18 @@ const basisLayoutKlassisch = {
 
 
 function getAktuellerKunde() {
+  const params = new URLSearchParams(window.location.search)
+  const kundeAusUrl = params.get("kunde")
+
+  if (kundeAusUrl && kunden[kundeAusUrl]) {
+    localStorage.setItem("aktuellerKunde", kundeAusUrl)
+    return kundeAusUrl
+  }
+
   const select = document.getElementById("kunde")
-  if (!select) return localStorage.getItem("aktuellerKunde") || "sorgundseitz"
-  return select.value || "sorgundseitz"
+  if (select?.value) return select.value
+
+  return localStorage.getItem("aktuellerKunde") || "sorgundseitz"
 }
 
 function setAktuellerKunde(kunde) {
@@ -101,6 +87,43 @@ function setAktuellerKunde(kunde) {
 
 function getStorageKey(baseKey) {
   return `${baseKey}_${getAktuellerKunde()}`
+}
+
+function renderLayoutAuswahl() {
+  const select = document.getElementById("layout-auswahl")
+  if (!select) return
+
+  const kunde = getAktuellerKunde()
+  const layoutsFuerKunde = kundenLayouts[kunde] || {}
+
+  select.innerHTML = ""
+
+  const keys = Object.keys(layoutsFuerKunde)
+
+  if (keys.length === 0) {
+    const option = document.createElement("option")
+    option.value = ""
+    option.textContent = "Keine Layouts verfügbar"
+    select.appendChild(option)
+    return
+  }
+
+  keys.forEach((key) => {
+    const option = document.createElement("option")
+    option.value = key
+
+    if (key === "mittagstisch_instagram") {
+      option.textContent = "Mittagstisch Instagram"
+    } else if (key === "mittagstisch_druck") {
+      option.textContent = "Mittagstisch Druck"
+    } else {
+      option.textContent = key
+    }
+
+    select.appendChild(option)
+  })
+
+  select.value = keys[0]
 }
 
 function safeParseStorage(key, fallback) {
@@ -118,30 +141,81 @@ function safeParseStorage(key, fallback) {
   }
 }
 
+function renderKundenDropdown() {
+  const select = document.getElementById("kunde")
+  if (!select) return
+
+  const aktuellerKunde = getAktuellerKunde()
+  select.innerHTML = ""
+
+  Object.entries(kunden).forEach(([key, config]) => {
+    const option = document.createElement("option")
+    option.value = key
+    option.textContent = config.name
+    select.appendChild(option)
+  })
+
+  if (kunden[aktuellerKunde]) {
+    select.value = aktuellerKunde
+  }
+}
+
 function getGerichte() {
-  return safeParseStorage(getStorageKey("gerichte"), structuredClone(standardGerichte))
+  const kunde = getAktuellerKunde()
+
+  const fallbackGerichte =
+    kundenGerichte[kunde] && Object.keys(kundenGerichte[kunde]).length > 0
+      ? structuredClone(kundenGerichte[kunde])
+      : structuredClone(standardGerichte)
+
+  return safeParseStorage(getStorageKey("gerichte"), fallbackGerichte)
 }
 
 function updateFormatAuswahl() {
-  const layout = document.getElementById("layout-auswahl")?.value
+  const layoutSelect = document.getElementById("layout-auswahl")
   const formatSelect = document.getElementById("format-auswahl")
+  const kunde = getAktuellerKunde()
 
-  if (!layout || !formatSelect) return
+  if (!layoutSelect || !formatSelect) return
+
+  const layout = layoutSelect.value
+  const layoutsFuerKunde = kundenLayouts[kunde] || {}
+  const layoutConfig = layoutsFuerKunde[layout]
+
+  console.log("updateFormatAuswahl()", {
+    kunde,
+    layout,
+    layoutsFuerKunde,
+    layoutConfig
+  })
 
   formatSelect.innerHTML = ""
 
-  if (layout === "mittagstisch_instagram") {
-    formatSelect.innerHTML = `
-      <option value="feed">Feed</option>
-      <option value="story">Story</option>
-    `
+  if (!layoutConfig || typeof layoutConfig !== "object") {
+    const option = document.createElement("option")
+    option.value = ""
+    option.textContent = "Keine Formate verfügbar"
+    formatSelect.appendChild(option)
+    return
   }
 
-  if (layout === "mittagstisch_druck") {
-    formatSelect.innerHTML = `
-      <option value="front">Vorderseite</option>
-      <option value="back">Rückseite</option>
-    `
+  const formate = Object.keys(layoutConfig)
+
+  formate.forEach((format) => {
+    const option = document.createElement("option")
+    option.value = format
+
+    if (format === "feed") option.textContent = "Feed"
+    else if (format === "story") option.textContent = "Story"
+    else if (format === "front") option.textContent = "Vorderseite"
+    else if (format === "back") option.textContent = "Rückseite"
+    else option.textContent = format
+
+    formatSelect.appendChild(option)
+  })
+
+  if (formate.length > 0) {
+    formatSelect.value = formate[0]
   }
 }
 
@@ -154,32 +228,55 @@ function saveLayoutOverrides(data) {
 }
 
 function updateAdminEditorUI() {
+  const layout = document.getElementById("layout-auswahl")?.value
   const format = document.getElementById("format-auswahl")?.value
 
   const bereichWrap = document.getElementById("bereich-wrap")
   const tagWrap = document.getElementById("tag-wrap")
+  const lineWrap = document.getElementById("line-wrap")
   const mealFieldsWrap = document.getElementById("meal-fields-wrap")
   const weekFieldsWrap = document.getElementById("week-fields-wrap")
 
   const istInstagram = format === "feed" || format === "story"
   const istFront = format === "front"
   const istBack = format === "back"
+  const istGoetzText = layout === "tagesgerichte_feed_text" && format === "feed"
 
   if (bereichWrap) {
     bereichWrap.style.display = istBack ? "block" : "none"
   }
 
   if (tagWrap) {
-    tagWrap.style.display = (istInstagram || istBack) ? "block" : "none"
+    tagWrap.style.display = (istInstagram || istBack || istGoetzText) ? "block" : "none"
+  }
+
+  if (lineWrap) {
+    lineWrap.style.display = istGoetzText ? "block" : "none"
   }
 
   if (mealFieldsWrap) {
-    mealFieldsWrap.style.display = (istInstagram || istBack) ? "block" : "none"
+    mealFieldsWrap.style.display = (istInstagram || istBack || istGoetzText) ? "block" : "none"
   }
 
   if (weekFieldsWrap) {
-    weekFieldsWrap.style.display = "block"
+    weekFieldsWrap.style.display = (istInstagram || istFront || istBack || istGoetzText) ? "block" : "none"
   }
+
+  // Nicht benötigte Felder beim Text-Layout ausblenden
+  const imageX = document.getElementById("imageX")?.parentElement
+  const imageY = document.getElementById("imageY")?.parentElement
+  const imageRadius = document.getElementById("imageRadius")?.parentElement
+  const textMaxWidth = document.getElementById("textMaxWidth")?.parentElement
+  const textLineHeight = document.getElementById("textLineHeight")?.parentElement
+  const priceColor = document.getElementById("priceColor")?.parentElement
+  const textFontSize = document.getElementById("textFontSize")?.parentElement
+  const priceFontSize = document.getElementById("priceFontSize")?.parentElement
+
+  const ausblendenBeiGoetz = [imageX, imageY, imageRadius, textMaxWidth, textLineHeight, priceColor, textFontSize, priceFontSize]
+  ausblendenBeiGoetz.forEach(el => {
+    if (!el) return
+    el.style.display = istGoetzText ? "none" : "block"
+  })
 }
 
 function renderGerichte() {
@@ -310,6 +407,7 @@ function ladePositionsWerte() {
   const tag = document.getElementById("tag-auswahl").value
   const bereich = document.getElementById("bereich-auswahl")?.value || "links"
   const kunde = getAktuellerKunde()
+  const line = document.getElementById("line-auswahl")?.value || "1"
 
   const layoutsFuerKunde = kundenLayouts[kunde] || {}
   const overrides = getLayoutOverrides()
@@ -319,6 +417,41 @@ function ladePositionsWerte() {
 
   let finalMeal = {}
   let finalWeek = {}
+
+  if (layout === "tagesgerichte_feed_text" && format === "feed") {
+  const kunde = getAktuellerKunde()
+  const layoutsFuerKunde = kundenLayouts[kunde] || {}
+  const overrides = getLayoutOverrides()
+
+  const standardTag = layoutsFuerKunde[layout]?.[format]?.tage?.[tag] || {}
+  const customTag = overrides?.[layout]?.[format]?.tage?.[tag] || {}
+
+  const finalTag = {
+    ...standardTag,
+    ...customTag
+  }
+
+  document.getElementById("weekX").value = finalTag.titleX ?? ""
+  document.getElementById("weekY").value = finalTag.titleY ?? ""
+  document.getElementById("weekFontSize").value = finalTag.titleFontSize ?? ""
+
+  document.getElementById("textX").value = finalTag[`meal${line}X`] ?? ""
+  document.getElementById("textY").value = finalTag[`meal${line}Y`] ?? ""
+  document.getElementById("priceX").value = finalTag[`price${line}X`] ?? ""
+  document.getElementById("priceY").value = finalTag[`price${line}Y`] ?? ""
+
+  // Nicht genutzte Felder leeren
+  document.getElementById("imageX").value = ""
+  document.getElementById("imageY").value = ""
+  document.getElementById("imageRadius").value = ""
+  document.getElementById("textMaxWidth").value = ""
+  document.getElementById("textLineHeight").value = ""
+  document.getElementById("textFontSize").value = ""
+  document.getElementById("priceFontSize").value = ""
+
+  renderAdminPreview()
+  return
+}
 
   // Instagram: feed/story
   if (standardFormat?.meals) {
@@ -387,6 +520,7 @@ function speicherePositionsWerte() {
   const format = document.getElementById("format-auswahl").value
   const tag = document.getElementById("tag-auswahl").value
   const bereich = document.getElementById("bereich-auswahl")?.value || "links"
+  const line = document.getElementById("line-auswahl")?.value || "1"
 
   const overrides = getLayoutOverrides()
 
@@ -413,6 +547,28 @@ function speicherePositionsWerte() {
     y: Number(document.getElementById("weekY").value),
     fontSize: Number(document.getElementById("weekFontSize").value)
   }
+  if (layout === "tagesgerichte_feed_text" && format === "feed") {
+  if (!overrides[layout]) overrides[layout] = {}
+  if (!overrides[layout][format]) overrides[layout][format] = {}
+  if (!overrides[layout][format].tage) overrides[layout][format].tage = {}
+  if (!overrides[layout][format].tage[tag]) overrides[layout][format].tage[tag] = {}
+
+  overrides[layout][format].tage[tag] = {
+    ...overrides[layout][format].tage[tag],
+    titleX: Number(document.getElementById("weekX").value),
+    titleY: Number(document.getElementById("weekY").value),
+    titleFontSize: Number(document.getElementById("weekFontSize").value),
+    [`meal${line}X`]: Number(document.getElementById("textX").value),
+    [`meal${line}Y`]: Number(document.getElementById("textY").value),
+    [`price${line}X`]: Number(document.getElementById("priceX").value),
+    [`price${line}Y`]: Number(document.getElementById("priceY").value)
+  }
+
+  saveLayoutOverrides(overrides)
+  document.getElementById("layout-status").textContent = "Positionswerte gespeichert."
+  ladePositionsWerte()
+  return
+}
 
   // Instagram
   if (format === "feed" || format === "story") {
@@ -472,10 +628,14 @@ function getAdminPreviewGerichte() {
 
 function handleKundeChange() {
   const kunde = getAktuellerKunde()
-  setAktuellerKunde(kunde)
+  localStorage.setItem("aktuellerKunde", kunde)
+
+  gerichte = getGerichte()
 
   renderGerichte()
-  renderAdminLayoutDropdown()
+  renderLayoutAuswahl()
+  updateFormatAuswahl()
+  updateAdminEditorUI()
   ladePositionsWerte()
   renderAdminPreview()
 }
@@ -542,10 +702,29 @@ function getPreviewLayout() {
   const tag = document.getElementById("tag-auswahl").value
   const bereich = document.getElementById("bereich-auswahl")?.value || "links"
   const kunde = getAktuellerKunde()
+  const line = document.getElementById("line-auswahl")?.value || "1"
 
   const overrides = getLayoutOverrides()
   const layoutsFuerKunde = kundenLayouts[kunde] || {}
   const standard = JSON.parse(JSON.stringify(layoutsFuerKunde[layout][format]))
+  if (layout === "tagesgerichte_feed_text" && format === "feed") {
+  const standardTag = standard.tage?.[tag] || {}
+  const customTag = overrides?.[layout]?.[format]?.tage?.[tag] || {}
+
+  standard.tage[tag] = {
+    ...standardTag,
+    ...customTag,
+    titleX: Number(document.getElementById("weekX").value),
+    titleY: Number(document.getElementById("weekY").value),
+    titleFontSize: Number(document.getElementById("weekFontSize").value),
+    [`meal${line}X`]: Number(document.getElementById("textX").value),
+    [`meal${line}Y`]: Number(document.getElementById("textY").value),
+    [`price${line}X`]: Number(document.getElementById("priceX").value),
+    [`price${line}Y`]: Number(document.getElementById("priceY").value)
+  }
+
+  return standard
+}
 
   // Instagram
   if (standard.meals) {
@@ -671,6 +850,34 @@ async function renderAdminPreview() {
     const template = await loadImageAdmin(layout.template)
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.drawImage(template, 0, 0, canvas.width, canvas.height)
+
+    if (layout.tage && format === "feed") {
+  const tage = ["montag", "dienstag", "mittwoch", "donnerstag", "freitag"]
+
+  tage.forEach((tagKey) => {
+    const tag = layout.tage[tagKey]
+    if (!tag) return
+
+    ctx.fillStyle = "#76b82a"
+    ctx.font = `700 ${tag.titleFontSize}px Georgia, serif`
+    ctx.textAlign = "left"
+    ctx.fillText(tagKey.charAt(0).toUpperCase() + tagKey.slice(1), tag.titleX, tag.titleY)
+
+    ctx.fillStyle = "#ffffff"
+    ctx.font = `500 26px Georgia, serif`
+    ctx.fillText("Beispielgericht 1", tag.meal1X, tag.meal1Y)
+    ctx.fillText("Beispielgericht 2", tag.meal2X, tag.meal2Y)
+    ctx.fillText("Beispielgericht 3", tag.meal3X, tag.meal3Y)
+
+    ctx.textAlign = "right"
+    ctx.fillText("€ 6,90", tag.price1X, tag.price1Y)
+    ctx.fillText("€ 7,40", tag.price2X, tag.price2Y)
+    ctx.fillText("€ 8,20", tag.price3X, tag.price3Y)
+  })
+
+  document.getElementById("layout-status").textContent = "Vorschau aktualisiert."
+  return
+}
 
     // Instagram
     if (layout.woche && layout.meals) {
@@ -885,23 +1092,32 @@ function endDrag() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  const kundeSelect = document.getElementById("kunde")
-  const gespeicherterKunde = localStorage.getItem("aktuellerKunde") || "sorgundseitz"
+  try {
+    const kunde = getAktuellerKunde()
+    const kundeSelect = document.getElementById("kunde")
 
-  if (kundeSelect) {
-    kundeSelect.value = gespeicherterKunde
-  }
+    console.log("DOMContentLoaded admin", { kunde })
 
-  renderGerichte()
-  updateFormatAuswahl()
-  updateAdminEditorUI()
-  ladePositionsWerte()
-  renderAdminPreview()
+    if (kundeSelect) {
+      kundeSelect.value = kunde
+    }
 
-  const canvas = document.getElementById("admin-preview-canvas")
-  if (canvas) {
-    canvas.addEventListener("mousedown", startDrag)
-    canvas.addEventListener("mousemove", dragMove)
-    canvas.addEventListener("mouseup", endDrag)
+    gerichte = getGerichte()
+    renderKundenDropdown()
+    renderGerichte()
+    renderLayoutAuswahl()
+    updateFormatAuswahl()
+    updateAdminEditorUI()
+    ladePositionsWerte()
+    renderAdminPreview()
+
+    const canvas = document.getElementById("admin-preview-canvas")
+    if (canvas) {
+      canvas.addEventListener("mousedown", startDrag)
+      canvas.addEventListener("mousemove", dragMove)
+      canvas.addEventListener("mouseup", endDrag)
+    }
+  } catch (error) {
+    console.error("Fehler im DOMContentLoaded:", error)
   }
 })
