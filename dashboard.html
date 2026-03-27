@@ -347,9 +347,9 @@ function seedDemoIfEmpty() {
   const demos = [
     {
       id: 'demo-1',
-      name: 'Mittagstisch Instagram',
+      name: 'Metzgerei Götz — Mittagstisch',
       template: 'instagram_story',
-      templateLabel: 'Story + Feed',
+      templateLabel: 'Story + Feed + Druck',
       days: { dienstag:true, mittwoch:true, donnerstag:true, freitag:true },
       mealsPerDay: { dienstag:1, mittwoch:1, donnerstag:1, freitag:1 },
       logo: null,
@@ -507,6 +507,12 @@ function useDesign(id) {
   // Speichere aktuellen Design-State für Wizard
   localStorage.setItem('mp_active_design', JSON.stringify(design))
 
+  // Für bestehendes Design: alten Generator nutzen
+  // Demo-Design und Metzgerei Götz → alter Generator
+  if (id === 'demo-1' || (design && design.template === 'instagram_story')) {
+    window.location.href = 'index.html?kunde=metzgereigoetz'
+    return
+  }
   // Gehe direkt zu Schritt 3 im Wizard
   window.location.href = 'wizard.html?step=3&design=' + id
 }
