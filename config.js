@@ -20,6 +20,8 @@ const standardGerichte = {
   karpfenfilet: { bild: "Gerichte/karpfenfilet.jpg", preis: "8,50 €", text: "Karpfenfilet mit Kartoffelsalat" },
   krautwickel: { bild: "Gerichte/krautwickel.jpg", preis: "8,50 €", text: "Krautwickel mit Kartoffeln" },
   lasagne: { bild: "Gerichte/lasagne.jpg", preis: "6,80 €", text: "Lasagne" },
+  spareribs: { bild: "Gerichte/spareribs.jpg", preis: "6,80 €", text: "Sparerips mit Wedges" },
+  
   rindfleisch_meerrettich: { bild: "Gerichte/rindfleisch_meerrettich.jpg", preis: "8,50 €", text: "Rindfleisch mit Kartoffelsalat und Meerrettich" }
 }
 
